@@ -6,6 +6,18 @@ import { serveMedia } from './uploads.js';
 
 async function route(request, env) {
   const url = new URL(request.url);
+  if (url.pathname === '/api/debug-admin' && request.method === 'GET') {
+  const row = await env.DB.prepare(
+    'SELECT id, username, length(password_hash) AS hash_length FROM admin_users WHERE username = ?'
+  ).bind('admin').first();
+
+  return json({
+    found: Boolean(row),
+    id: row?.id ?? null,
+    username: row?.username ?? null,
+    hash_length: row?.hash_length ?? null
+  });
+}
   if (url.pathname === '/api/admin/login' && request.method === 'POST') return handleLogin(request, env);
   if (url.pathname === '/api/admin/logout' && request.method === 'POST') return handleLogout(request, env);
   if (url.pathname === '/api/admin/session' && request.method === 'GET') return handleSession(request, env);

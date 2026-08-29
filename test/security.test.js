@@ -1,0 +1,6 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {json,sameOriginOrAbsent,apiError} from '../src/http.js';import {normalizeSong} from '../src/admin-api.js';import {validateUpload} from '../src/uploads.js';
+test('json responses include nosniff',()=>{assert.equal(json({ok:true}).headers.get('x-content-type-options'),'nosniff')});
+test('origin helper rejects a different origin',()=>{assert.equal(sameOriginOrAbsent(new Request('https://site.test/api',{headers:{origin:'https://evil.test'}})),false);assert.equal(sameOriginOrAbsent(new Request('https://site.test/api',{headers:{origin:'https://site.test'}})),true)});
+test('javascript external url is rejected',()=>{assert.ok(normalizeSong({title:'T',artist:'A',audio_type:'external',audio_url:'javascript:alert(1)',cover_type:'external'}).error)});
+test('oversized multipart payload is rejected by upload validator',()=>{assert.throws(()=>validateUpload({type:'audio/mpeg',size:50*1024*1024+1,name:'x.mp3'},'audio'),e=>e.status===413&&e.code==='FILE_TOO_LARGE')});
+test('unknown exception becomes stable internal error without stack',async()=>{const res=apiError(new Error('secret stack'));assert.equal(res.status,500);const body=await res.json();assert.deepEqual(body,{error:{code:'INTERNAL_ERROR',message:'Internal server error'}});assert.equal(JSON.stringify(body).includes('secret'),false)});

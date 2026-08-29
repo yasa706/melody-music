@@ -1,5 +1,5 @@
 import { json, apiError } from './http.js';
-import { handleLogin, handleLogout, handleSession } from './auth.js';
+import { handleLogin, handleLogout, handleSession, verifyPassword } from './auth.js';
 import { handleAdminApi } from './admin-api.js';
 import { handlePublicApi } from './public-api.js';
 import { serveMedia } from './uploads.js';
@@ -8,14 +8,16 @@ async function route(request, env) {
   const url = new URL(request.url);
   if (url.pathname === '/api/debug-admin' && request.method === 'GET') {
   const row = await env.DB.prepare(
-    'SELECT id, username, length(password_hash) AS hash_length FROM admin_users WHERE username = ?'
+    'SELECT id, username, password_hash FROM admin_users WHERE username = ?'
   ).bind('admin').first();
 
   return json({
     found: Boolean(row),
-    id: row?.id ?? null,
     username: row?.username ?? null,
-    hash_length: row?.hash_length ?? null
+    hash_length: row?.password_hash?.length ?? null,
+    password_test: row
+      ? await verifyPassword('Gloria2018Music', row.password_hash)
+      : false
   });
 }
   if (url.pathname === '/api/admin/login' && request.method === 'POST') return handleLogin(request, env);

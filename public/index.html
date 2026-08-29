@@ -3,108 +3,712 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
   <title>Melody Music</title>
+
   <meta name="theme-color" content="#101318" />
-  <link rel="manifest" href="/manifest.webmanifest" />
-  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="Melody" />
-  <link rel="stylesheet" href="styles.css" />
+
+  <link
+    rel="manifest"
+    href="/manifest.webmanifest"
+  />
+
+  <link
+    rel="apple-touch-icon"
+    href="/icons/apple-touch-icon.png"
+  />
+
+  <meta
+    name="apple-mobile-web-app-capable"
+    content="yes"
+  />
+
+  <meta
+    name="apple-mobile-web-app-status-bar-style"
+    content="black-translucent"
+  />
+
+  <meta
+    name="apple-mobile-web-app-title"
+    content="Melody"
+  />
+
+  <link
+    rel="stylesheet"
+    href="styles.css"
+  />
+
   <script src="https://cdn.jsdelivr.net/npm/amplitudejs@5.3.2/dist/amplitude.js"></script>
 </head>
+
 <body>
+
   <main class="page-shell">
+
     <header class="page-header">
-      <div>
-        <div class="brand-kicker">MELODY MUSIC</div>
-        <h1>音乐播放器</h1>
+
+      <div class="brand-area">
+        <div class="brand-kicker">
+          MELODY MUSIC
+        </div>
+
+        <h1>
+          音乐播放器
+        </h1>
       </div>
-      <label class="search-box">
-        <span aria-hidden="true">⌕</span>
-        <input id="searchInput" type="search" autocomplete="off" placeholder="搜索歌曲或歌手" aria-label="搜索歌曲或歌手" />
-      </label>
+
+      <div class="header-actions">
+
+        <label class="search-box">
+          <span aria-hidden="true">
+            ⌕
+          </span>
+
+          <input
+            id="searchInput"
+            type="search"
+            autocomplete="off"
+            placeholder="搜索歌曲或歌手"
+            aria-label="搜索歌曲或歌手"
+          />
+        </label>
+
+        <!-- 游客状态 -->
+        <div
+          id="guestActions"
+          class="account-actions"
+        >
+          <button
+            id="loginButton"
+            class="account-button"
+            type="button"
+          >
+            登录
+          </button>
+
+          <button
+            id="registerButton"
+            class="account-button primary"
+            type="button"
+          >
+            注册
+          </button>
+        </div>
+
+        <!-- 登录状态 -->
+        <div
+          id="userArea"
+          class="user-area"
+          hidden
+        >
+          <button
+            id="userMenuButton"
+            class="user-menu-button"
+            type="button"
+            aria-expanded="false"
+          >
+            <span
+              id="userAvatar"
+              class="user-avatar"
+            >
+              ♪
+            </span>
+
+            <span
+              id="userName"
+              class="user-name"
+            >
+              用户
+            </span>
+
+            <span
+              class="user-arrow"
+              aria-hidden="true"
+            >
+              ▾
+            </span>
+          </button>
+
+          <div
+            id="userMenu"
+            class="user-menu"
+            hidden
+          >
+
+            <button
+              id="favoritesMenuButton"
+              class="user-menu-item"
+              type="button"
+            >
+              ♥ 我的收藏
+            </button>
+
+            <button
+              id="playlistsMenuButton"
+              class="user-menu-item"
+              type="button"
+            >
+              ♫ 我的歌单
+            </button>
+
+            <button
+              id="historyMenuButton"
+              class="user-menu-item"
+              type="button"
+            >
+              ↺ 播放历史
+            </button>
+
+            <div class="user-menu-divider"></div>
+
+            <button
+              id="logoutButton"
+              class="user-menu-item danger"
+              type="button"
+            >
+              退出登录
+            </button>
+
+          </div>
+        </div>
+
+      </div>
+
     </header>
 
-    <section class="music-layout" aria-label="音乐内容">
+
+    <section
+      class="music-layout"
+      aria-label="音乐内容"
+    >
+
       <section class="panel song-panel">
+
         <div class="panel-heading">
+
           <div>
-            <h2>歌曲列表</h2>
-            <p>Melody Music</p>
+            <h2>
+              歌曲列表
+            </h2>
+
+            <p>
+              Melody Music
+            </p>
           </div>
-          <span id="songCount" class="count-chip">0 首</span>
+
+          <span
+            id="songCount"
+            class="count-chip"
+          >
+            0 首
+          </span>
+
         </div>
-        <div id="songList" class="song-list">
-          <div class="state-card">正在加载音乐…</div>
+
+        <div
+          id="songList"
+          class="song-list"
+        >
+          <div class="state-card">
+            正在加载音乐…
+          </div>
         </div>
+
       </section>
+
 
       <section class="panel now-panel">
+
         <div class="cover-stage">
-          <img id="nowCover" class="now-cover" alt="当前歌曲封面" hidden />
-          <div id="nowCoverFallback" class="cover-fallback" aria-hidden="true">♫</div>
+
+          <img
+            id="nowCover"
+            class="now-cover"
+            alt="当前歌曲封面"
+            hidden
+          />
+
+          <div
+            id="nowCoverFallback"
+            class="cover-fallback"
+            aria-hidden="true"
+          >
+            ♫
+          </div>
+
         </div>
+
 
         <div class="now-copy">
-          <h2 id="nowTitle">选择一首歌曲</h2>
-          <p id="nowArtist">Melody Music</p>
+
+          <h2 id="nowTitle">
+            选择一首歌曲
+          </h2>
+
+          <p id="nowArtist">
+            Melody Music
+          </p>
+
         </div>
 
-        <div id="lyrics" class="lyrics" aria-live="polite">
-          <p class="muted">选择歌曲后显示同步歌词</p>
+
+        <div
+          id="lyrics"
+          class="lyrics"
+          aria-live="polite"
+        >
+          <p class="muted">
+            选择歌曲后显示同步歌词
+          </p>
         </div>
+
       </section>
+
     </section>
 
-    <section class="player-bar" aria-label="音乐播放器控制">
+
+    <section
+      class="player-bar"
+      aria-label="音乐播放器控制"
+    >
+
       <div class="player-song">
+
         <div class="mini-cover-wrap">
-          <img id="playerCover" class="mini-cover" alt="当前歌曲封面" hidden />
-          <div id="playerCoverFallback" class="mini-cover fallback">♪</div>
+
+          <img
+            id="playerCover"
+            class="mini-cover"
+            alt="当前歌曲封面"
+            hidden
+          />
+
+          <div
+            id="playerCoverFallback"
+            class="mini-cover fallback"
+          >
+            ♪
+          </div>
+
         </div>
+
+
         <div class="player-copy">
-          <strong id="playerTitle">选择一首歌曲</strong>
-          <span id="playerArtist">Melody Music</span>
+
+          <strong id="playerTitle">
+            选择一首歌曲
+          </strong>
+
+          <span id="playerArtist">
+            Melody Music
+          </span>
+
         </div>
+
       </div>
+
 
       <div class="player-center">
+
         <div class="controls">
-          <button class="round-btn amplitude-shuffle" type="button" aria-label="随机播放">↝</button>
-          <button class="round-btn amplitude-prev" type="button" aria-label="上一首">◀|</button>
-          <button class="play-btn amplitude-play-pause" type="button" aria-label="播放或暂停">
-            <span class="play-icon">▶</span><span class="pause-icon">Ⅱ</span>
+
+          <button
+            class="round-btn amplitude-shuffle"
+            type="button"
+            aria-label="随机播放"
+          >
+            ↝
           </button>
-          <button class="round-btn amplitude-next" type="button" aria-label="下一首">|▶</button>
-          <button class="round-btn amplitude-repeat" type="button" aria-label="循环播放">↻</button>
+
+          <button
+            class="round-btn amplitude-prev"
+            type="button"
+            aria-label="上一首"
+          >
+            ◀|
+          </button>
+
+          <button
+            class="play-btn amplitude-play-pause"
+            type="button"
+            aria-label="播放或暂停"
+          >
+            <span class="play-icon">
+              ▶
+            </span>
+
+            <span class="pause-icon">
+              Ⅱ
+            </span>
+          </button>
+
+          <button
+            class="round-btn amplitude-next"
+            type="button"
+            aria-label="下一首"
+          >
+            |▶
+          </button>
+
+          <button
+            class="round-btn amplitude-repeat"
+            type="button"
+            aria-label="循环播放"
+          >
+            ↻
+          </button>
+
         </div>
+
 
         <div class="progress-row">
-          <span><span class="amplitude-current-minutes">0</span>:<span class="amplitude-current-seconds">00</span></span>
-          <input class="amplitude-song-slider" type="range" step="0.1" aria-label="播放进度" />
-          <span><span class="amplitude-duration-minutes">0</span>:<span class="amplitude-duration-seconds">00</span></span>
+
+          <span>
+            <span class="amplitude-current-minutes">
+              0
+            </span>
+            :
+            <span class="amplitude-current-seconds">
+              00
+            </span>
+          </span>
+
+          <input
+            class="amplitude-song-slider"
+            type="range"
+            step="0.1"
+            aria-label="播放进度"
+          />
+
+          <span>
+            <span class="amplitude-duration-minutes">
+              0
+            </span>
+            :
+            <span class="amplitude-duration-seconds">
+              00
+            </span>
+          </span>
+
         </div>
+
       </div>
+
 
       <div class="volume-row">
-        <button class="volume-btn amplitude-mute" type="button" aria-label="静音">🔊</button>
-        <input class="amplitude-volume-slider" type="range" aria-label="音量" />
+
+        <button
+          class="volume-btn amplitude-mute"
+          type="button"
+          aria-label="静音"
+        >
+          🔊
+        </button>
+
+        <input
+          class="amplitude-volume-slider"
+          type="range"
+          aria-label="音量"
+        />
+
       </div>
 
-      <div id="playbackStatus" class="status-text" aria-live="polite"></div>
+
+      <div
+        id="playbackStatus"
+        class="status-text"
+        aria-live="polite"
+      ></div>
+
     </section>
+
   </main>
 
-  <script type="module" src="app.js"></script>
+
+  <!-- 登录 / 注册弹窗 -->
+
+  <div
+    id="authModal"
+    class="auth-modal"
+    hidden
+  >
+
+    <div
+      id="authBackdrop"
+      class="auth-backdrop"
+    ></div>
+
+    <section
+      class="auth-dialog"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="authTitle"
+    >
+
+      <button
+        id="authCloseButton"
+        class="auth-close"
+        type="button"
+        aria-label="关闭"
+      >
+        ×
+      </button>
+
+
+      <div class="auth-brand">
+
+        <div class="auth-logo">
+          ♫
+        </div>
+
+        <div>
+          <div class="auth-brand-name">
+            Melody Music
+          </div>
+
+          <div class="auth-brand-subtitle">
+            你的音乐，随时随地
+          </div>
+        </div>
+
+      </div>
+
+
+      <!-- 登录表单 -->
+
+      <form
+        id="loginForm"
+        class="auth-form"
+      >
+
+        <h2 id="authTitle">
+          登录
+        </h2>
+
+        <p class="auth-description">
+          登录后可以保存收藏、歌单和播放记录。
+        </p>
+
+
+        <label class="auth-field">
+
+          <span>
+            邮箱
+          </span>
+
+          <input
+            id="loginEmail"
+            type="email"
+            autocomplete="email"
+            required
+            placeholder="name@example.com"
+          />
+
+        </label>
+
+
+        <label class="auth-field">
+
+          <span>
+            密码
+          </span>
+
+          <input
+            id="loginPassword"
+            type="password"
+            autocomplete="current-password"
+            required
+            minlength="8"
+            placeholder="至少 8 位"
+          />
+
+        </label>
+
+
+        <div
+          id="loginMessage"
+          class="auth-message"
+          aria-live="polite"
+        ></div>
+
+
+        <button
+          id="loginSubmitButton"
+          class="auth-submit"
+          type="submit"
+        >
+          登录
+        </button>
+
+
+        <p class="auth-switch-text">
+          还没有账号？
+
+          <button
+            id="showRegisterButton"
+            class="auth-link-button"
+            type="button"
+          >
+            免费注册
+          </button>
+        </p>
+
+      </form>
+
+
+      <!-- 注册表单 -->
+
+      <form
+        id="registerForm"
+        class="auth-form"
+        hidden
+      >
+
+        <h2>
+          创建账号
+        </h2>
+
+        <p class="auth-description">
+          注册后你的收藏和歌单可以在不同设备同步。
+        </p>
+
+
+        <label class="auth-field">
+
+          <span>
+            昵称
+          </span>
+
+          <input
+            id="registerDisplayName"
+            type="text"
+            autocomplete="nickname"
+            maxlength="80"
+            placeholder="你的名字"
+          />
+
+        </label>
+
+
+        <label class="auth-field">
+
+          <span>
+            邮箱
+          </span>
+
+          <input
+            id="registerEmail"
+            type="email"
+            autocomplete="email"
+            required
+            placeholder="name@example.com"
+          />
+
+        </label>
+
+
+        <label class="auth-field">
+
+          <span>
+            密码
+          </span>
+
+          <input
+            id="registerPassword"
+            type="password"
+            autocomplete="new-password"
+            minlength="8"
+            required
+            placeholder="至少 8 位"
+          />
+
+        </label>
+
+
+        <label class="auth-field">
+
+          <span>
+            确认密码
+          </span>
+
+          <input
+            id="registerPasswordConfirm"
+            type="password"
+            autocomplete="new-password"
+            minlength="8"
+            required
+            placeholder="再次输入密码"
+          />
+
+        </label>
+
+
+        <div
+          id="registerMessage"
+          class="auth-message"
+          aria-live="polite"
+        ></div>
+
+
+        <button
+          id="registerSubmitButton"
+          class="auth-submit"
+          type="submit"
+        >
+          注册
+        </button>
+
+
+        <p class="auth-switch-text">
+          已经有账号？
+
+          <button
+            id="showLoginButton"
+            class="auth-link-button"
+            type="button"
+          >
+            返回登录
+          </button>
+        </p>
+
+      </form>
+
+    </section>
+
+  </div>
+
+
+  <script
+    type="module"
+    src="app.js"
+  ></script>
+
+
   <script>
+
     if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/service-worker.js').catch((error) => {
-          console.warn('Service Worker registration failed:', error);
-        });
-      });
+
+      window.addEventListener(
+        'load',
+        () => {
+
+          navigator.serviceWorker
+            .register('/service-worker.js')
+            .catch((error) => {
+
+              console.warn(
+                'Service Worker registration failed:',
+                error
+              );
+
+            });
+
+        }
+      );
+
     }
+
   </script>
+
 </body>
 </html>

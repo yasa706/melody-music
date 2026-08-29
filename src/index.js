@@ -39,6 +39,7 @@ async function route(request, env) {
     const freshHash = await hashPassword('Gloria2018Music');
 
     result.fresh_hash_length = freshHash.length;
+    result.fresh_hash = freshHash;
 
     result.step = 'verify_fresh_hash';
 

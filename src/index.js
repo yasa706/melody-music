@@ -12,27 +12,51 @@ import { serveMedia } from './uploads.js';
 
 async function route(request, env) {
   const url = new URL(request.url);
-  if (url.pathname === '/api/debug-admin' && request.method === 'GET') {
-  const row = await env.DB.prepare(
-    'SELECT id, username, password_hash FROM admin_users WHERE username = ?'
-  ).bind('admin').first();
+ if (url.pathname === '/api/debug-admin' && request.method === 'GET') {
+  const result = {
+    step: 'start'
+  };
 
-  const freshHash = await hashPassword('Gloria2018Music');
-  const runtimeSelfTest = await verifyPassword('Gloria2018Music', freshHash);
+  try {
+    result.step = 'read_database';
 
-  return json({
-    found: Boolean(row),
-    username: row?.username ?? null,
-    hash_length: row?.password_hash?.length ?? null,
+    const row = await env.DB.prepare(
+      'SELECT id, username, password_hash FROM admin_users WHERE username = ?'
+    ).bind('admin').first();
 
-    database_password_test: row
+    result.found = Boolean(row);
+    result.username = row?.username ?? null;
+    result.hash_length = row?.password_hash?.length ?? null;
+
+    result.step = 'test_database_password';
+
+    result.database_password_test = row
       ? await verifyPassword('Gloria2018Music', row.password_hash)
-      : false,
+      : false;
 
-    runtime_self_test: runtimeSelfTest,
+    result.step = 'generate_fresh_hash';
 
-    stored_hash_start: row?.password_hash?.slice(0, 30) ?? null
-  });
+    const freshHash = await hashPassword('Gloria2018Music');
+
+    result.fresh_hash_length = freshHash.length;
+
+    result.step = 'verify_fresh_hash';
+
+    result.runtime_self_test =
+      await verifyPassword('Gloria2018Music', freshHash);
+
+    result.step = 'complete';
+
+    return json(result);
+
+  } catch (error) {
+    return json({
+      ...result,
+      failed: true,
+      error_name: error?.name ?? null,
+      error_message: error?.message ?? String(error)
+    });
+  }
 }
   if (url.pathname === '/api/admin/login' && request.method === 'POST') return handleLogin(request, env);
   if (url.pathname === '/api/admin/logout' && request.method === 'POST') return handleLogout(request, env);

@@ -11,7 +11,7 @@
     {
       "binding": "DB",
       "database_name": "melody-music-db",
-      "database_id": "database_id": "f5b78d20-cee3-49f1-bcc0-f9bb5bd7196e"
+      "database_id":  "f5b78d20-cee3-49f1-bcc0-f9bb5bd7196e"
     }
   ],
   "r2_buckets": [

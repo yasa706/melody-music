@@ -1,16 +1,22 @@
 import { toAmplitudeSongs } from './player-data.js';
 
 let apiSongs = [];
-let playlists = [];
 let currentLyrics = [];
 let lastLyricIndex = -2;
 
+const songListEl = document.getElementById('songList');
 const lyricsEl = document.getElementById('lyrics');
 const statusEl = document.getElementById('playbackStatus');
+const searchInput = document.getElementById('searchInput');
+const songCountEl = document.getElementById('songCount');
+const nowTitle = document.getElementById('nowTitle');
+const nowArtist = document.getElementById('nowArtist');
+const nowCover = document.getElementById('nowCover');
+const nowCoverFallback = document.getElementById('nowCoverFallback');
 const playerTitle = document.getElementById('playerTitle');
 const playerArtist = document.getElementById('playerArtist');
 const playerCover = document.getElementById('playerCover');
-const coverFallback = document.getElementById('coverFallback');
+const playerCoverFallback = document.getElementById('playerCoverFallback');
 
 const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({
   '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
@@ -25,7 +31,10 @@ function parseLrc(text = '') {
     const lyric = raw.replace(/\[(\d{1,3}):(\d{2})(?:\.(\d{1,3}))?\]/g, '').trim();
     for (const stamp of stamps) {
       const fraction = (stamp[3] || '').padEnd(3, '0').slice(0, 3);
-      lines.push({ time: Number(stamp[1]) * 60 + Number(stamp[2]) + Number(fraction || 0) / 1000, text: lyric });
+      lines.push({
+        time: Number(stamp[1]) * 60 + Number(stamp[2]) + Number(fraction || 0) / 1000,
+        text: lyric,
+      });
     }
   }
   return lines.sort((a, b) => a.time - b.time);
@@ -40,76 +49,83 @@ function activeLyricIndex(lines, seconds) {
   return index;
 }
 
-function coverMarkup(url, className = 'song-cover') {
-  return url
-    ? `<img class="${className}" src="${esc(url)}" alt="" loading="lazy">`
-    : `<div class="cover-placeholder ${className}">♪</div>`;
+function formatDuration(seconds) {
+  const value = Number(seconds);
+  if (!Number.isFinite(value) || value <= 0) return '—';
+  return `${Math.floor(value / 60)}:${Math.floor(value % 60).toString().padStart(2, '0')}`;
 }
 
-function renderPlaylists() {
-  const root = document.getElementById('playlistCards');
-  document.getElementById('playlistCount').textContent = playlists.length ? `${playlists.length} 个` : '';
-  root.innerHTML = playlists.length
-    ? playlists.slice(0, 8).map((playlist) => `
-      <article class="card">
-        ${playlist.cover_url ? `<img src="${esc(playlist.cover_url)}" alt="" loading="lazy">` : '<div class="card-cover-placeholder">♫</div>'}
-        <div class="card-title">${esc(playlist.name)}</div>
-        <div class="card-sub">${esc(playlist.description || `${playlist.song_count || 0} 首歌曲`)}</div>
-      </article>`).join('')
-    : '<div class="loading-state">还没有公开歌单</div>';
-}
+function renderSongList(list = apiSongs) {
+  songCountEl.textContent = `${list.length} 首`;
+  if (!list.length) {
+    songListEl.innerHTML = '<div class="state-card">没有找到歌曲</div>';
+    return;
+  }
 
-function songRows(list) {
-  if (!list.length) return '<div class="empty-box">没有找到歌曲</div>';
-  return list.map((song) => {
+  songListEl.innerHTML = list.map((song) => {
     const globalIndex = apiSongs.findIndex((item) => String(item.id) === String(song.id));
-    return `
-      <div class="song-row" data-song-index="${globalIndex}">
-        <button class="row-play amplitude-play-pause" type="button" data-amplitude-song-index="${globalIndex}" aria-label="播放 ${esc(song.title)}">
-          <span class="row-play-icon">▶</span><span class="row-pause-icon">Ⅱ</span>
-        </button>
-        <div class="song-main">${coverMarkup(song.cover_url)}<div><div class="song-title">${esc(song.title)}</div><div class="song-meta">${esc(song.artist || '未知歌手')}</div></div></div>
-        <div class="song-album">${esc(song.album || song.category_name || '—')}</div>
-        <div class="song-time">${song.duration_seconds ? formatDuration(song.duration_seconds) : '—'}</div>
-      </div>`;
-  }).join('');
-}
+    const cover = song.cover_url
+      ? `<img class="song-cover" src="${esc(song.cover_url)}" alt="" loading="lazy">`
+      : '<div class="song-cover-fallback">♪</div>';
 
-function renderSongs() {
-  const root = document.getElementById('songList');
-  root.innerHTML = songRows(apiSongs);
-  document.getElementById('songCount').textContent = `${apiSongs.length} 首`;
+    return `
+      <button class="song-row amplitude-play-pause" type="button" data-amplitude-song-index="${globalIndex}" data-song-index="${globalIndex}" aria-label="播放 ${esc(song.title)}">
+        ${cover}
+        <span class="song-info">
+          <span class="song-title">${esc(song.title || '未命名歌曲')}</span>
+          <span class="song-artist">${esc(song.artist || '未知歌手')}</span>
+        </span>
+        <span class="song-duration">${formatDuration(song.duration_seconds)}</span>
+      </button>`;
+  }).join('');
+
   window.Amplitude.bindNewElements();
+  highlightActiveRow();
 }
 
 function renderLyrics() {
   lastLyricIndex = -2;
-  lyricsEl.innerHTML = currentLyrics.length
-    ? currentLyrics.map((line, index) => `<button class="lyric-line" type="button" data-lyric="${index}" data-seconds="${line.time}">${esc(line.text || '♪')}</button>`).join('')
-    : '<p class="muted">暂无同步歌词</p>';
+  if (!currentLyrics.length) {
+    lyricsEl.innerHTML = '<p class="muted">暂无同步歌词</p>';
+    return;
+  }
+
+  lyricsEl.innerHTML = currentLyrics.map((line, index) =>
+    `<button class="lyric-line" type="button" data-lyric="${index}" data-seconds="${line.time}">${esc(line.text || '♪')}</button>`
+  ).join('');
 
   lyricsEl.querySelectorAll('.lyric-line').forEach((button) => {
     button.addEventListener('click', () => {
-      const index = window.Amplitude.getActiveIndex();
-      window.Amplitude.skipTo(Number(button.dataset.seconds), index);
+      const activeIndex = window.Amplitude.getActiveIndex();
+      window.Amplitude.skipTo(Number(button.dataset.seconds), activeIndex);
     });
   });
 }
 
+function setCover(url) {
+  for (const [image, fallback] of [[nowCover, nowCoverFallback], [playerCover, playerCoverFallback]]) {
+    if (url) {
+      image.src = url;
+      image.hidden = false;
+      fallback.hidden = true;
+    } else {
+      image.removeAttribute('src');
+      image.hidden = true;
+      fallback.hidden = false;
+    }
+  }
+}
+
 function syncNowPlaying() {
   const song = window.Amplitude.getActiveSongMetadata?.() || {};
-  playerTitle.textContent = song.name || '选择一首歌曲';
-  playerArtist.textContent = song.artist || 'Melody';
+  const title = song.name || '选择一首歌曲';
+  const artist = song.artist || 'Melody Music';
 
-  if (song.cover_art_url) {
-    playerCover.src = song.cover_art_url;
-    playerCover.hidden = false;
-    coverFallback.hidden = true;
-  } else {
-    playerCover.removeAttribute('src');
-    playerCover.hidden = true;
-    coverFallback.hidden = false;
-  }
+  nowTitle.textContent = title;
+  nowArtist.textContent = artist;
+  playerTitle.textContent = title;
+  playerArtist.textContent = artist;
+  setCover(song.cover_art_url || '');
 
   currentLyrics = parseLrc(song.lyrics_lrc || '');
   renderLyrics();
@@ -118,13 +134,16 @@ function syncNowPlaying() {
 
 function highlightActiveRow() {
   const active = String(window.Amplitude.getActiveIndex?.() ?? '');
-  document.querySelectorAll('.song-row').forEach((row) => row.classList.toggle('active', row.dataset.songIndex === active));
+  document.querySelectorAll('.song-row').forEach((row) => {
+    row.classList.toggle('active', row.dataset.songIndex === active);
+  });
 }
 
 function syncLyrics() {
   if (!currentLyrics.length) return;
   const index = activeLyricIndex(currentLyrics, window.Amplitude.getSongPlayedSeconds());
   if (index === lastLyricIndex) return;
+
   lyricsEl.querySelector('.active')?.classList.remove('active');
   const line = lyricsEl.querySelector(`[data-lyric="${index}"]`);
   if (line) {
@@ -134,55 +153,35 @@ function syncLyrics() {
   lastLyricIndex = index;
 }
 
-function formatDuration(seconds) {
-  const value = Number(seconds);
-  if (!Number.isFinite(value) || value <= 0) return '—';
-  return `${Math.floor(value / 60)}:${Math.floor(value % 60).toString().padStart(2, '0')}`;
-}
-
-function showView(name) {
-  document.querySelectorAll('.nav-item').forEach((button) => button.classList.toggle('active', button.dataset.view === name));
-  document.querySelectorAll('.view').forEach((view) => view.classList.toggle('active', view.id === `${name}View`));
-}
-
-document.querySelectorAll('.nav-item').forEach((button) => button.addEventListener('click', () => showView(button.dataset.view)));
-
-document.getElementById('searchInput').addEventListener('input', (event) => {
+searchInput.addEventListener('input', (event) => {
   const query = event.target.value.trim().toLowerCase();
-  if (!query) return;
-  showView('search');
-  const results = apiSongs.filter((song) => [song.title, song.artist, song.album].some((value) => String(value || '').toLowerCase().includes(query)));
-  document.getElementById('searchResults').innerHTML = songRows(results);
-  window.Amplitude.bindNewElements();
-});
-
-document.getElementById('playFeatured').addEventListener('click', () => {
-  if (apiSongs.length) window.Amplitude.playSongAtIndex(0);
+  if (!query) {
+    renderSongList(apiSongs);
+    return;
+  }
+  const results = apiSongs.filter((song) =>
+    [song.title, song.artist, song.album, song.category_name]
+      .some((value) => String(value || '').toLowerCase().includes(query))
+  );
+  renderSongList(results);
 });
 
 async function init() {
   if (!window.Amplitude) {
     statusEl.textContent = '播放器加载失败';
-    document.getElementById('songList').innerHTML = '<div class="empty-box">AmplitudeJS 未能加载，请刷新页面</div>';
+    songListEl.innerHTML = '<div class="state-card">AmplitudeJS 未能加载，请刷新页面</div>';
     return;
   }
 
   try {
-    const [songResponse, playlistResponse] = await Promise.all([
-      fetch('/api/songs').then((response) => {
-        if (!response.ok) throw new Error('songs');
-        return response.json();
-      }),
-      fetch('/api/playlists').then((response) => response.ok ? response.json() : ({ playlists: [] })),
-    ]);
-
-    apiSongs = songResponse.songs || [];
-    playlists = playlistResponse.playlists || [];
-    renderPlaylists();
+    const response = await fetch('/api/songs');
+    if (!response.ok) throw new Error('songs');
+    const payload = await response.json();
+    apiSongs = payload.songs || [];
 
     if (!apiSongs.length) {
-      document.getElementById('songList').innerHTML = '<div class="empty-box">后台还没有发布歌曲</div>';
-      document.getElementById('songCount').textContent = '0 首';
+      songListEl.innerHTML = '<div class="state-card">后台还没有发布歌曲</div>';
+      songCountEl.textContent = '0 首';
       return;
     }
 
@@ -196,16 +195,17 @@ async function init() {
         initialized: syncNowPlaying,
         song_change: syncNowPlaying,
         timeupdate: syncLyrics,
+        play: () => { statusEl.textContent = ''; highlightActiveRow(); },
+        pause: highlightActiveRow,
         error: () => { statusEl.textContent = '音频加载失败'; },
-        play: () => { statusEl.textContent = ''; },
       },
     });
 
-    renderSongs();
+    renderSongList(apiSongs);
     syncNowPlaying();
-  } catch (error) {
-    document.getElementById('songList').innerHTML = '<div class="empty-box">音乐加载失败，请稍后重试</div>';
-    document.getElementById('playlistCards').innerHTML = '<div class="loading-state">歌单加载失败</div>';
+  } catch {
+    songListEl.innerHTML = '<div class="state-card">音乐加载失败，请稍后重试</div>';
+    songCountEl.textContent = '0 首';
   }
 }
 

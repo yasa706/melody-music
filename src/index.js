@@ -1,5 +1,11 @@
 import { json, apiError } from './http.js';
-import { handleLogin, handleLogout, handleSession, verifyPassword } from './auth.js';
+import {
+  handleLogin,
+  handleLogout,
+  handleSession,
+  verifyPassword,
+  hashPassword
+} from './auth.js';
 import { handleAdminApi } from './admin-api.js';
 import { handlePublicApi } from './public-api.js';
 import { serveMedia } from './uploads.js';
@@ -11,13 +17,21 @@ async function route(request, env) {
     'SELECT id, username, password_hash FROM admin_users WHERE username = ?'
   ).bind('admin').first();
 
+  const freshHash = await hashPassword('Gloria2018Music');
+  const runtimeSelfTest = await verifyPassword('Gloria2018Music', freshHash);
+
   return json({
     found: Boolean(row),
     username: row?.username ?? null,
     hash_length: row?.password_hash?.length ?? null,
-    password_test: row
+
+    database_password_test: row
       ? await verifyPassword('Gloria2018Music', row.password_hash)
-      : false
+      : false,
+
+    runtime_self_test: runtimeSelfTest,
+
+    stored_hash_start: row?.password_hash?.slice(0, 30) ?? null
   });
 }
   if (url.pathname === '/api/admin/login' && request.method === 'POST') return handleLogin(request, env);

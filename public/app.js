@@ -4,6 +4,8 @@ let apiSongs = [];
 let currentLyrics = [];
 let lastLyricIndex = -2;
 let currentUser = null;
+let favoriteSongIds = new Set();
+let showingFavoritesOnly = false;
 
 /* =========================================================
    Player DOM
@@ -210,6 +212,8 @@ function apiErrorMessage(payload, fallback) {
     REGISTRATION_FAILED: '注册失败，请稍后再试',
     ORIGIN_FORBIDDEN: '请求来源验证失败',
     INVALID_JSON: '提交的数据格式不正确',
+    UNAUTHORIZED: '请先登录',
+    SONG_NOT_FOUND: '歌曲不存在',
   };
 
   return (
@@ -363,6 +367,10 @@ async function loadCurrentUser() {
         : null;
 
     renderUserState();
+
+    if (currentUser) {
+      await loadFavorites();
+    }
   } catch {
     currentUser = null;
     renderUserState();
@@ -397,6 +405,8 @@ async function loginUser(email, password) {
   currentUser = payload.user || null;
 
   renderUserState();
+
+  await loadFavorites();
 
   return payload;
 }
@@ -438,6 +448,8 @@ async function registerUser(
 
   renderUserState();
 
+  await loadFavorites();
+
   return payload;
 }
 
@@ -452,10 +464,133 @@ async function logoutUser() {
     });
   } finally {
     currentUser = null;
+    favoriteSongIds = new Set();
+    showingFavoritesOnly = false;
 
     renderUserState();
+    renderSongList(apiSongs);
 
     closeUserMenu();
+  }
+}
+
+/* =========================================================
+   Favorites API
+   ========================================================= */
+
+async function loadFavorites() {
+  if (!currentUser) {
+    favoriteSongIds = new Set();
+    return;
+  }
+
+  try {
+    const response = await fetch(
+      '/api/user/favorites',
+      {
+        method: 'GET',
+        credentials: 'same-origin',
+        headers: {
+          Accept: 'application/json',
+        },
+      }
+    );
+
+    if (!response.ok) {
+      favoriteSongIds = new Set();
+      return;
+    }
+
+    const payload = await readJson(response);
+
+    favoriteSongIds = new Set(
+      (payload.favorites || []).map(
+        (song) => String(song.id)
+      )
+    );
+
+    if (apiSongs.length) {
+      renderCurrentSongList();
+    }
+  } catch {
+    favoriteSongIds = new Set();
+  }
+}
+
+async function addFavorite(songId) {
+  const response = await fetch(
+    `/api/user/favorites/${songId}`,
+    {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: {
+        Accept: 'application/json',
+      },
+    }
+  );
+
+  const payload = await readJson(response);
+
+  if (!response.ok) {
+    throw new Error(
+      apiErrorMessage(
+        payload,
+        '收藏失败，请稍后再试'
+      )
+    );
+  }
+
+  favoriteSongIds.add(String(songId));
+}
+
+async function removeFavorite(songId) {
+  const response = await fetch(
+    `/api/user/favorites/${songId}`,
+    {
+      method: 'DELETE',
+      credentials: 'same-origin',
+      headers: {
+        Accept: 'application/json',
+      },
+    }
+  );
+
+  const payload = await readJson(response);
+
+  if (!response.ok) {
+    throw new Error(
+      apiErrorMessage(
+        payload,
+        '取消收藏失败，请稍后再试'
+      )
+    );
+  }
+
+  favoriteSongIds.delete(String(songId));
+}
+
+async function toggleFavorite(songId) {
+  if (!currentUser) {
+    openAuthModal('login');
+    return;
+  }
+
+  const key = String(songId);
+
+  try {
+    if (favoriteSongIds.has(key)) {
+      await removeFavorite(songId);
+      statusEl.textContent = '已取消收藏';
+    } else {
+      await addFavorite(songId);
+      statusEl.textContent = '已收藏';
+    }
+
+    renderCurrentSongList();
+  } catch (error) {
+    statusEl.textContent =
+      error?.message ||
+      '收藏操作失败';
   }
 }
 
@@ -632,15 +767,12 @@ userMenuButton.addEventListener(
   'click',
   (event) => {
     event.stopPropagation();
-
     toggleUserMenu();
   }
 );
 
 document.addEventListener('click', (event) => {
-  if (
-    !userArea.contains(event.target)
-  ) {
+  if (!userArea.contains(event.target)) {
     closeUserMenu();
   }
 });
@@ -660,18 +792,27 @@ logoutButton.addEventListener(
   }
 );
 
-/*
- * 这三个功能下一阶段接真实 API。
- * 现在先保留入口。
- */
-
 favoritesMenuButton.addEventListener(
   'click',
   () => {
     closeUserMenu();
 
+    showingFavoritesOnly =
+      !showingFavoritesOnly;
+
+    favoritesMenuButton.textContent =
+      showingFavoritesOnly
+        ? '♫ 查看全部歌曲'
+        : '♥ 我的收藏';
+
+    searchInput.value = '';
+
+    renderCurrentSongList();
+
     statusEl.textContent =
-      '我的收藏功能正在接入';
+      showingFavoritesOnly
+        ? '正在查看我的收藏'
+        : '';
   }
 );
 
@@ -681,7 +822,7 @@ playlistsMenuButton.addEventListener(
     closeUserMenu();
 
     statusEl.textContent =
-      '我的歌单功能正在接入';
+      '我的歌单功能下一步接入';
   }
 );
 
@@ -691,7 +832,7 @@ historyMenuButton.addEventListener(
     closeUserMenu();
 
     statusEl.textContent =
-      '播放历史功能正在接入';
+      '播放历史功能下一步接入';
   }
 );
 
@@ -699,13 +840,50 @@ historyMenuButton.addEventListener(
    Song List
    ========================================================= */
 
+function currentBaseList() {
+  if (!showingFavoritesOnly) {
+    return apiSongs;
+  }
+
+  return apiSongs.filter((song) =>
+    favoriteSongIds.has(String(song.id))
+  );
+}
+
+function renderCurrentSongList() {
+  const query = searchInput.value
+    .trim()
+    .toLowerCase();
+
+  let list = currentBaseList();
+
+  if (query) {
+    list = list.filter((song) =>
+      [
+        song.title,
+        song.artist,
+        song.album,
+        song.category_name,
+      ].some((value) =>
+        String(value || '')
+          .toLowerCase()
+          .includes(query)
+      )
+    );
+  }
+
+  renderSongList(list);
+}
+
 function renderSongList(list = apiSongs) {
   songCountEl.textContent =
     `${list.length} 首`;
 
   if (!list.length) {
     songListEl.innerHTML =
-      '<div class="state-card">没有找到歌曲</div>';
+      showingFavoritesOnly
+        ? '<div class="state-card">还没有收藏歌曲</div>'
+        : '<div class="state-card">没有找到歌曲</div>';
 
     return;
   }
@@ -724,43 +902,95 @@ function renderSongList(list = apiSongs) {
           )}" alt="" loading="lazy">`
         : '<div class="song-cover-fallback">♪</div>';
 
+      const isFavorite =
+        favoriteSongIds.has(String(song.id));
+
       return `
-        <button
-          class="song-row amplitude-play-pause"
-          type="button"
-          data-amplitude-song-index="${globalIndex}"
-          data-song-index="${globalIndex}"
-          aria-label="播放 ${esc(song.title)}"
-        >
-          ${cover}
+        <div class="song-row-wrap">
 
-          <span class="song-info">
-            <span class="song-title">
-              ${esc(
-                song.title ||
-                  '未命名歌曲'
-              )}
+          <button
+            class="song-row amplitude-play-pause"
+            type="button"
+            data-amplitude-song-index="${globalIndex}"
+            data-song-index="${globalIndex}"
+            aria-label="播放 ${esc(song.title)}"
+          >
+            ${cover}
+
+            <span class="song-info">
+              <span class="song-title">
+                ${esc(
+                  song.title ||
+                    '未命名歌曲'
+                )}
+              </span>
+
+              <span class="song-artist">
+                ${esc(
+                  song.artist ||
+                    '未知歌手'
+                )}
+              </span>
             </span>
 
-            <span class="song-artist">
-              ${esc(
-                song.artist ||
-                  '未知歌手'
+            <span class="song-duration">
+              ${formatDuration(
+                song.duration_seconds
               )}
             </span>
-          </span>
+          </button>
 
-          <span class="song-duration">
-            ${formatDuration(
-              song.duration_seconds
-            )}
-          </span>
-        </button>
+          <button
+            class="favorite-btn ${
+              isFavorite ? 'active' : ''
+            }"
+            type="button"
+            data-favorite-song-id="${esc(song.id)}"
+            aria-label="${
+              isFavorite
+                ? '取消收藏'
+                : '收藏歌曲'
+            }"
+            title="${
+              isFavorite
+                ? '取消收藏'
+                : '收藏歌曲'
+            }"
+          >
+            ${isFavorite ? '♥' : '♡'}
+          </button>
+
+        </div>
       `;
     })
     .join('');
 
   window.Amplitude.bindNewElements();
+
+  songListEl
+    .querySelectorAll(
+      '[data-favorite-song-id]'
+    )
+    .forEach((button) => {
+      button.addEventListener(
+        'click',
+        async (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+
+          const songId =
+            button.dataset.favoriteSongId;
+
+          button.disabled = true;
+
+          try {
+            await toggleFavorite(songId);
+          } finally {
+            button.disabled = false;
+          }
+        }
+      );
+    });
 
   highlightActiveRow();
 }
@@ -916,31 +1146,8 @@ function syncLyrics() {
 
 searchInput.addEventListener(
   'input',
-  (event) => {
-    const query = event.target.value
-      .trim()
-      .toLowerCase();
-
-    if (!query) {
-      renderSongList(apiSongs);
-      return;
-    }
-
-    const results = apiSongs.filter(
-      (song) =>
-        [
-          song.title,
-          song.artist,
-          song.album,
-          song.category_name,
-        ].some((value) =>
-          String(value || '')
-            .toLowerCase()
-            .includes(query)
-        )
-    );
-
-    renderSongList(results);
+  () => {
+    renderCurrentSongList();
   }
 );
 
@@ -1009,7 +1216,7 @@ async function initPlayer() {
       },
     });
 
-    renderSongList(apiSongs);
+    renderCurrentSongList();
 
     syncNowPlaying();
   } catch {
@@ -1024,10 +1231,8 @@ async function initPlayer() {
 async function init() {
   renderUserState();
 
-  await Promise.all([
-    loadCurrentUser(),
-    initPlayer(),
-  ]);
+  await initPlayer();
+  await loadCurrentUser();
 }
 
 init();

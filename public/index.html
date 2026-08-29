@@ -8,15 +8,8 @@
 
   <meta name="theme-color" content="#101318" />
 
-  <link
-    rel="manifest"
-    href="/manifest.webmanifest"
-  />
-
-  <link
-    rel="apple-touch-icon"
-    href="/icons/apple-touch-icon.png"
-  />
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
 
   <meta
     name="apple-mobile-web-app-capable"
@@ -33,10 +26,7 @@
     content="Melody"
   />
 
-  <link
-    rel="stylesheet"
-    href="styles.css"
-  />
+  <link rel="stylesheet" href="styles.css" />
 
   <script src="https://cdn.jsdelivr.net/npm/amplitudejs@5.3.2/dist/amplitude.js"></script>
 </head>
@@ -74,6 +64,7 @@
         </label>
 
         <!-- 游客状态 -->
+
         <div
           id="guestActions"
           class="account-actions"
@@ -96,11 +87,13 @@
         </div>
 
         <!-- 登录状态 -->
+
         <div
           id="userArea"
           class="user-area"
           hidden
         >
+
           <button
             id="userMenuButton"
             class="user-menu-button"
@@ -170,6 +163,7 @@
             </button>
 
           </div>
+
         </div>
 
       </div>
@@ -187,11 +181,11 @@
         <div class="panel-heading">
 
           <div>
-            <h2>
+            <h2 id="songListTitle">
               歌曲列表
             </h2>
 
-            <p>
+            <p id="songListSubtitle">
               Melody Music
             </p>
           </div>
@@ -238,7 +232,6 @@
 
         </div>
 
-
         <div class="now-copy">
 
           <h2 id="nowTitle">
@@ -250,7 +243,6 @@
           </p>
 
         </div>
-
 
         <div
           id="lyrics"
@@ -291,7 +283,6 @@
           </div>
 
         </div>
-
 
         <div class="player-copy">
 
@@ -360,7 +351,6 @@
 
         </div>
 
-
         <div class="progress-row">
 
           <span>
@@ -413,7 +403,6 @@
 
       </div>
 
-
       <div
         id="playbackStatus"
         class="status-text"
@@ -425,7 +414,9 @@
   </main>
 
 
-  <!-- 登录 / 注册弹窗 -->
+  <!-- =====================================================
+       登录 / 注册弹窗
+       ===================================================== -->
 
   <div
     id="authModal"
@@ -454,7 +445,6 @@
         ×
       </button>
 
-
       <div class="auth-brand">
 
         <div class="auth-logo">
@@ -474,8 +464,6 @@
       </div>
 
 
-      <!-- 登录表单 -->
-
       <form
         id="loginForm"
         class="auth-form"
@@ -488,7 +476,6 @@
         <p class="auth-description">
           登录后可以保存收藏、歌单和播放记录。
         </p>
-
 
         <label class="auth-field">
 
@@ -505,7 +492,6 @@
           />
 
         </label>
-
 
         <label class="auth-field">
 
@@ -524,13 +510,11 @@
 
         </label>
 
-
         <div
           id="loginMessage"
           class="auth-message"
           aria-live="polite"
         ></div>
-
 
         <button
           id="loginSubmitButton"
@@ -540,8 +524,8 @@
           登录
         </button>
 
-
         <p class="auth-switch-text">
+
           还没有账号？
 
           <button
@@ -551,12 +535,11 @@
           >
             免费注册
           </button>
+
         </p>
 
       </form>
 
-
-      <!-- 注册表单 -->
 
       <form
         id="registerForm"
@@ -571,7 +554,6 @@
         <p class="auth-description">
           注册后你的收藏和歌单可以在不同设备同步。
         </p>
-
 
         <label class="auth-field">
 
@@ -589,7 +571,6 @@
 
         </label>
 
-
         <label class="auth-field">
 
           <span>
@@ -605,7 +586,6 @@
           />
 
         </label>
-
 
         <label class="auth-field">
 
@@ -624,7 +604,6 @@
 
         </label>
 
-
         <label class="auth-field">
 
           <span>
@@ -642,13 +621,11 @@
 
         </label>
 
-
         <div
           id="registerMessage"
           class="auth-message"
           aria-live="polite"
         ></div>
-
 
         <button
           id="registerSubmitButton"
@@ -658,8 +635,8 @@
           注册
         </button>
 
-
         <p class="auth-switch-text">
+
           已经有账号？
 
           <button
@@ -669,9 +646,180 @@
           >
             返回登录
           </button>
+
         </p>
 
       </form>
+
+    </section>
+
+  </div>
+
+
+  <!-- =====================================================
+       我的歌单管理窗口
+       ===================================================== -->
+
+  <div
+    id="playlistModal"
+    class="auth-modal"
+    hidden
+  >
+
+    <div
+      id="playlistBackdrop"
+      class="auth-backdrop"
+    ></div>
+
+    <section
+      class="auth-dialog playlist-dialog"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="playlistModalTitle"
+    >
+
+      <button
+        id="playlistCloseButton"
+        class="auth-close"
+        type="button"
+        aria-label="关闭"
+      >
+        ×
+      </button>
+
+      <div class="playlist-header">
+
+        <div>
+          <div class="brand-kicker">
+            MELODY MUSIC
+          </div>
+
+          <h2 id="playlistModalTitle">
+            我的歌单
+          </h2>
+
+          <p>
+            创建自己的音乐收藏列表
+          </p>
+        </div>
+
+      </div>
+
+
+      <form
+        id="createPlaylistForm"
+        class="create-playlist-form"
+      >
+
+        <input
+          id="newPlaylistName"
+          type="text"
+          maxlength="100"
+          required
+          autocomplete="off"
+          placeholder="输入新歌单名称"
+        />
+
+        <button
+          id="createPlaylistButton"
+          type="submit"
+        >
+          ＋ 创建
+        </button>
+
+      </form>
+
+      <div
+        id="playlistMessage"
+        class="auth-message"
+        aria-live="polite"
+      ></div>
+
+      <div
+        id="playlistList"
+        class="playlist-list"
+      >
+        <div class="state-card">
+          正在加载歌单…
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+
+  <!-- =====================================================
+       添加歌曲到歌单
+       ===================================================== -->
+
+  <div
+    id="addToPlaylistModal"
+    class="auth-modal"
+    hidden
+  >
+
+    <div
+      id="addToPlaylistBackdrop"
+      class="auth-backdrop"
+    ></div>
+
+    <section
+      class="auth-dialog add-playlist-dialog"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="addToPlaylistTitle"
+    >
+
+      <button
+        id="addToPlaylistCloseButton"
+        class="auth-close"
+        type="button"
+        aria-label="关闭"
+      >
+        ×
+      </button>
+
+      <div class="playlist-header">
+
+        <div>
+          <div class="brand-kicker">
+            MELODY MUSIC
+          </div>
+
+          <h2 id="addToPlaylistTitle">
+            添加到歌单
+          </h2>
+
+          <p id="addToPlaylistSongName">
+            选择一个歌单
+          </p>
+        </div>
+
+      </div>
+
+      <div
+        id="addToPlaylistMessage"
+        class="auth-message"
+        aria-live="polite"
+      ></div>
+
+      <div
+        id="addToPlaylistList"
+        class="playlist-list"
+      >
+        <div class="state-card">
+          正在加载歌单…
+        </div>
+      </div>
+
+      <button
+        id="quickCreatePlaylistButton"
+        class="playlist-secondary-button"
+        type="button"
+      >
+        ＋ 创建新歌单
+      </button>
 
     </section>
 

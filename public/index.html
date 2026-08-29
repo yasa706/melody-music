@@ -4,110 +4,98 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Melody - 在线音乐</title>
+  <meta name="theme-color" content="#0b0d10" />
   <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/amplitudejs@5.3.2/dist/amplitude.js"></script>
 </head>
 <body>
-  <div class="app">
+  <div class="app-shell">
     <aside class="sidebar">
-      <div class="brand">♪ Melody</div>
-      <nav>
-        <button class="nav-item active" data-view="home">⌂ <span>首页</span></button>
-        <button class="nav-item" data-view="search">⌕ <span>搜索</span></button>
-        <button class="nav-item" data-view="library">♡ <span>我的音乐</span></button>
+      <a class="brand" href="/" aria-label="Melody 首页"><span class="brand-mark">♪</span><span>Melody</span></a>
+      <nav class="main-nav" aria-label="主导航">
+        <button class="nav-item active" data-view="home"><span>⌂</span><span>首页</span></button>
+        <button class="nav-item" data-view="search"><span>⌕</span><span>搜索</span></button>
+        <button class="nav-item" data-view="library"><span>♡</span><span>我的音乐</span></button>
       </nav>
-      <div class="playlist-title">我的歌单</div>
-      <button class="playlist-add">＋ 新建歌单</button>
-      <a class="admin-link" href="/admin/">后台管理</a>
+      <div class="sidebar-label">音乐库</div>
+      <div class="sidebar-copy">所有公开歌曲都由后台管理，并从 Cloudflare R2 直接播放。</div>
+      <a class="admin-link" href="/admin/">后台管理 →</a>
     </aside>
 
     <main class="content">
       <header class="topbar">
-        <div class="search-box">
+        <label class="search-box" aria-label="搜索歌曲">
           <span>⌕</span>
-          <input id="searchInput" placeholder="搜索歌曲、歌手" />
-        </div>
-        <div class="avatar">M</div>
+          <input id="searchInput" autocomplete="off" placeholder="搜索歌曲、歌手、专辑" />
+        </label>
+        <div class="avatar" aria-hidden="true">M</div>
       </header>
 
       <section id="homeView" class="view active">
-        <h1>晚上好</h1>
-        <div class="hero-grid">
-          <div class="hero-card gradient-one">
-            <div>
-              <div class="eyebrow">每日推荐</div>
-              <h2>让音乐陪你度过今天</h2>
-            </div>
-            <button class="hero-play" id="playFeatured">▶</button>
+        <section class="hero">
+          <div>
+            <div class="eyebrow">MELODY MUSIC</div>
+            <h1>让音乐陪你<br>进入每一个时刻</h1>
+            <p>成熟的 AmplitudeJS 播放核心，连接你的 D1 歌曲资料与 R2 音频。</p>
+            <button id="playFeatured" class="primary-btn" type="button">▶ 播放第一首</button>
           </div>
-          <div class="hero-card gradient-two">
-            <div>
-              <div class="eyebrow">轻松时刻</div>
-              <h2>放松、工作与旅行</h2>
-            </div>
-            <div class="hero-note">♫</div>
-          </div>
-        </div>
+          <div class="hero-art" aria-hidden="true"><span>♫</span></div>
+        </section>
 
-        <div class="section-head">
-          <h2>推荐歌单</h2>
-          <span>精选</span>
-        </div>
-        <div class="cards" id="playlistCards"></div>
+        <div class="section-head"><div><span class="kicker">PLAYLISTS</span><h2>推荐歌单</h2></div><span id="playlistCount"></span></div>
+        <div class="cards" id="playlistCards"><div class="loading-state">正在加载歌单…</div></div>
 
-        <div class="section-head">
-          <h2>热门歌曲</h2>
-          <span id="songCount"></span>
-        </div>
-        <div class="song-table" id="songList"></div>
-        <section class="lyrics-panel"><div class="section-head"><h2>歌词</h2><span id="playbackStatus"></span></div><div id="lyrics" class="lyrics"><p class="muted">选择歌曲后显示歌词</p></div></section>
+        <div class="section-head"><div><span class="kicker">TRACKS</span><h2>全部歌曲</h2></div><span id="songCount"></span></div>
+        <div class="song-table" id="songList"><div class="loading-state">正在加载音乐…</div></div>
+
+        <section class="lyrics-panel">
+          <div class="section-head compact"><div><span class="kicker">LYRICS</span><h2>同步歌词</h2></div><span id="playbackStatus"></span></div>
+          <div id="lyrics" class="lyrics"><p class="muted">选择歌曲后显示歌词</p></div>
+        </section>
       </section>
 
       <section id="searchView" class="view">
-        <h1>搜索</h1>
-        <p class="muted">输入歌名或歌手，结果会实时显示。</p>
-        <div class="song-table" id="searchResults"></div>
+        <div class="page-title"><span class="kicker">SEARCH</span><h1>搜索</h1><p>输入歌曲、歌手或专辑名称。</p></div>
+        <div class="song-table" id="searchResults"><div class="empty-box">在上方搜索框输入关键词</div></div>
       </section>
 
       <section id="libraryView" class="view">
-        <h1>我的音乐</h1>
-        <p class="muted">这里以后可以接入用户收藏和自建歌单。</p>
+        <div class="page-title"><span class="kicker">LIBRARY</span><h1>我的音乐</h1><p>收藏与个人歌单功能可以在下一阶段接入。</p></div>
         <div class="empty-box">♡ 还没有收藏歌曲</div>
       </section>
     </main>
   </div>
 
-  <footer class="player">
+  <footer class="player-dock" aria-label="音乐播放器">
     <div class="now-playing">
-      <img id="playerCover" src="https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=200&q=80" alt="">
-      <div>
+      <div class="dock-cover-wrap"><img id="playerCover" alt="当前歌曲封面" /><div id="coverFallback" class="dock-cover-fallback">♪</div></div>
+      <div class="track-copy">
         <div id="playerTitle" class="player-title">选择一首歌曲</div>
         <div id="playerArtist" class="player-artist">Melody</div>
       </div>
-      <button class="icon-btn">♡</button>
     </div>
 
-    <div class="player-center">
+    <div class="transport">
       <div class="controls">
-        <button id="shuffleBtn" class="icon-btn">⤨</button>
-        <button id="prevBtn" class="icon-btn">⏮</button>
-        <button id="playBtn" class="play-btn">▶</button>
-        <button id="nextBtn" class="icon-btn">⏭</button>
-        <button id="repeatBtn" class="icon-btn">↻</button>
+        <button class="icon-btn amplitude-shuffle" type="button" aria-label="随机播放">⤨</button>
+        <button class="icon-btn amplitude-prev" type="button" aria-label="上一首">⏮</button>
+        <button class="play-btn amplitude-play-pause" type="button" aria-label="播放或暂停"><span class="play-icon">▶</span><span class="pause-icon">Ⅱ</span></button>
+        <button class="icon-btn amplitude-next" type="button" aria-label="下一首">⏭</button>
+        <button class="icon-btn amplitude-repeat" type="button" aria-label="循环播放">↻</button>
       </div>
       <div class="progress-wrap">
-        <span id="currentTime">0:00</span>
-        <input id="progress" type="range" min="0" max="100" value="0">
-        <span id="duration">0:00</span>
+        <span class="amplitude-current-minutes">0</span>:<span class="amplitude-current-seconds">00</span>
+        <input class="amplitude-song-slider" type="range" step="0.1" aria-label="播放进度" />
+        <span class="amplitude-duration-minutes">0</span>:<span class="amplitude-duration-seconds">00</span>
       </div>
     </div>
 
     <div class="volume-wrap">
-      <span>🔊</span>
-      <input id="volume" type="range" min="0" max="1" step="0.01" value="0.8">
+      <button class="volume-icon amplitude-mute" type="button" aria-label="静音">🔊</button>
+      <input class="amplitude-volume-slider" type="range" aria-label="音量" />
     </div>
   </footer>
 
-  <audio id="audio"></audio>
   <script type="module" src="app.js"></script>
 </body>
 </html>

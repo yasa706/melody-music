@@ -14,6 +14,7 @@ import {
 } from './user-auth.js';
 
 import { handleAdminApi } from './admin-api.js';
+import { handleUserApi } from './user-api.js';
 import { handlePublicApi } from './public-api.js';
 import { serveMedia } from './uploads.js';
 
@@ -85,6 +86,20 @@ async function route(request, env) {
     );
 
     if (admin) return admin;
+  }
+
+  /*
+   * 登录用户 API
+   */
+
+  if (url.pathname.startsWith('/api/user/')) {
+    const userApi = await handleUserApi(
+      request,
+      env,
+      url
+    );
+
+    if (userApi) return userApi;
   }
 
   /*

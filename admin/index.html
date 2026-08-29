@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Melody 后台</title>
+  <style>
+    body{margin:0;font-family:Inter,system-ui,"PingFang SC","Microsoft YaHei",sans-serif;background:#0b0d10;color:#f5f5f5}
+    .wrap{max-width:1100px;margin:auto;padding:30px}
+    .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:26px}
+    a{color:#9ca3af;text-decoration:none}.card{background:#14171c;border:1px solid #262b33;border-radius:18px;padding:20px;margin-bottom:18px}
+    .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.stat{background:#1b1f26;border-radius:14px;padding:18px}.num{font-size:30px;font-weight:800;margin-top:8px}
+    button{border:0;border-radius:10px;padding:11px 16px;background:#1ed760;font-weight:700}.secondary{background:#262b33;color:white}
+    table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:13px;border-bottom:1px solid #292e36}th{color:#9ca3af;font-size:13px}
+    @media(max-width:700px){.grid{grid-template-columns:1fr 1fr}.wrap{padding:18px}table{font-size:13px}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div><h1 style="margin:0">Melody 后台</h1><div style="color:#9ca3af;margin-top:6px">管理歌曲、歌单、封面和歌词</div></div>
+      <a href="/">← 返回网站</a>
+    </div>
+
+    <div class="grid">
+      <div class="stat"><div>歌曲</div><div class="num">4</div></div>
+      <div class="stat"><div>歌单</div><div class="num">4</div></div>
+      <div class="stat"><div>用户</div><div class="num">—</div></div>
+      <div class="stat"><div>播放量</div><div class="num">—</div></div>
+    </div>
+
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+        <div><h2 style="margin:0 0 6px">歌曲管理</h2><div style="color:#9ca3af">第二版接 Cloudflare D1 + R2 后，这里可以真正上传和删除歌曲。</div></div>
+        <button>＋ 添加歌曲</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <table>
+        <thead><tr><th>歌曲</th><th>歌手</th><th>状态</th><th>操作</th></tr></thead>
+        <tbody>
+          <tr><td>Midnight Drive</td><td>Lena Hart</td><td>已发布</td><td><button class="secondary">编辑</button></td></tr>
+          <tr><td>City Lights</td><td>Nova Lane</td><td>已发布</td><td><button class="secondary">编辑</button></td></tr>
+          <tr><td>Ocean Air</td><td>Mira</td><td>已发布</td><td><button class="secondary">编辑</button></td></tr>
+          <tr><td>New Morning</td><td>Echo North</td><td>草稿</td><td><button class="secondary">编辑</button></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Melody - 在线音乐</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">♪ Melody</div>
+      <nav>
+        <button class="nav-item active" data-view="home">⌂ <span>首页</span></button>
+        <button class="nav-item" data-view="search">⌕ <span>搜索</span></button>
+        <button class="nav-item" data-view="library">♡ <span>我的音乐</span></button>
+      </nav>
+      <div class="playlist-title">我的歌单</div>
+      <button class="playlist-add">＋ 新建歌单</button>
+      <a class="admin-link" href="/admin/">后台管理</a>
+    </aside>
+
+    <main class="content">
+      <header class="topbar">
+        <div class="search-box">
+          <span>⌕</span>
+          <input id="searchInput" placeholder="搜索歌曲、歌手" />
+        </div>
+        <div class="avatar">M</div>
+      </header>
+
+      <section id="homeView" class="view active">
+        <h1>晚上好</h1>
+        <div class="hero-grid">
+          <div class="hero-card gradient-one">
+            <div>
+              <div class="eyebrow">每日推荐</div>
+              <h2>让音乐陪你度过今天</h2>
+            </div>
+            <button class="hero-play" id="playFeatured">▶</button>
+          </div>
+          <div class="hero-card gradient-two">
+            <div>
+              <div class="eyebrow">轻松时刻</div>
+              <h2>放松、工作与旅行</h2>
+            </div>
+            <div class="hero-note">♫</div>
+          </div>
+        </div>
+
+        <div class="section-head">
+          <h2>推荐歌单</h2>
+          <span>精选</span>
+        </div>
+        <div class="cards" id="playlistCards"></div>
+
+        <div class="section-head">
+          <h2>热门歌曲</h2>
+          <span id="songCount"></span>
+        </div>
+        <div class="song-table" id="songList"></div>
+      </section>
+
+      <section id="searchView" class="view">
+        <h1>搜索</h1>
+        <p class="muted">输入歌名或歌手，结果会实时显示。</p>
+        <div class="song-table" id="searchResults"></div>
+      </section>
+
+      <section id="libraryView" class="view">
+        <h1>我的音乐</h1>
+        <p class="muted">这里以后可以接入用户收藏和自建歌单。</p>
+        <div class="empty-box">♡ 还没有收藏歌曲</div>
+      </section>
+    </main>
+  </div>
+
+  <footer class="player">
+    <div class="now-playing">
+      <img id="playerCover" src="https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=200&q=80" alt="">
+      <div>
+        <div id="playerTitle" class="player-title">选择一首歌曲</div>
+        <div id="playerArtist" class="player-artist">Melody</div>
+      </div>
+      <button class="icon-btn">♡</button>
+    </div>
+
+    <div class="player-center">
+      <div class="controls">
+        <button id="shuffleBtn" class="icon-btn">⤨</button>
+        <button id="prevBtn" class="icon-btn">⏮</button>
+        <button id="playBtn" class="play-btn">▶</button>
+        <button id="nextBtn" class="icon-btn">⏭</button>
+        <button id="repeatBtn" class="icon-btn">↻</button>
+      </div>
+      <div class="progress-wrap">
+        <span id="currentTime">0:00</span>
+        <input id="progress" type="range" min="0" max="100" value="0">
+        <span id="duration">0:00</span>
+      </div>
+    </div>
+
+    <div class="volume-wrap">
+      <span>🔊</span>
+      <input id="volume" type="range" min="0" max="1" step="0.01" value="0.8">
+    </div>
+  </footer>
+
+  <audio id="audio"></audio>
+  <script src="app.js"></script>
+</body>
+</html>

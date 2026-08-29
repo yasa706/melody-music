@@ -10,5 +10,5 @@ CREATE TABLE IF NOT EXISTS user_play_history (
 CREATE INDEX IF NOT EXISTS idx_user_play_history_user_time
 ON user_play_history(user_id, played_at DESC);
 
-CREATE INDEX IF NOT EXISTS idx_user_play_history_song
+CREATE INDEX IF NOT EXISTS idx_user_play_history_song_id
 ON user_play_history(song_id);

@@ -17,6 +17,14 @@ function favoriteSongIdFromPath(pathname) {
   return match ? Number(match[1]) : null;
 }
 
+function historySongIdFromPath(pathname) {
+  const match = pathname.match(
+    /^\/api\/user\/history\/(\d+)$/
+  );
+
+  return match ? Number(match[1]) : null;
+}
+
 function playlistIdFromPath(pathname) {
   const match = pathname.match(
     /^\/api\/user\/playlists\/(\d+)$/
@@ -777,6 +785,130 @@ async function removeSongFromPlaylist(
 }
 
 /* =========================================================
+   Playback History
+   ========================================================= */
+
+async function listPlayHistory(request, env, url) {
+  const auth = await requireLoggedInUser(request, env);
+  if (auth.error) return auth.error;
+
+  const requestedLimit = Number(url.searchParams.get('limit') || 100);
+  const limit = Math.min(Math.max(Number.isFinite(requestedLimit) ? requestedLimit : 100, 1), 200);
+
+  const result = await env.DB
+    .prepare(`
+      SELECT
+        h.id AS history_id,
+        h.played_at,
+        s.id,
+        s.title,
+        s.artist,
+        s.album,
+        s.category_id,
+        s.audio_type,
+        s.audio_url,
+        s.cover_type,
+        s.cover_url,
+        s.lyrics_lrc,
+        s.duration_seconds,
+        s.sort_order
+      FROM user_play_history h
+      JOIN songs s
+        ON s.id = h.song_id
+      WHERE
+        h.user_id = ?
+        AND s.is_published = 1
+      ORDER BY h.played_at DESC, h.id DESC
+      LIMIT ?
+    `)
+    .bind(auth.user.user_id, limit)
+    .all();
+
+  return json(
+    { history: result.results || [] },
+    200,
+    { 'cache-control': 'no-store' }
+  );
+}
+
+async function addPlayHistory(request, env, songId) {
+  if (!validOrigin(request)) {
+    return json(
+      {
+        error: {
+          code: 'ORIGIN_FORBIDDEN',
+          message: 'Origin forbidden',
+        },
+      },
+      403
+    );
+  }
+
+  const auth = await requireLoggedInUser(request, env);
+  if (auth.error) return auth.error;
+
+  const song = await ensurePublishedSong(env, songId);
+
+  if (!song) {
+    return json(
+      {
+        error: {
+          code: 'SONG_NOT_FOUND',
+          message: 'Song not found',
+        },
+      },
+      404
+    );
+  }
+
+  await env.DB
+    .prepare(`
+      INSERT INTO user_play_history
+        (user_id, song_id)
+      VALUES (?, ?)
+    `)
+    .bind(auth.user.user_id, songId)
+    .run();
+
+  return json(
+    { ok: true, songId },
+    201,
+    { 'cache-control': 'no-store' }
+  );
+}
+
+async function clearPlayHistory(request, env) {
+  if (!validOrigin(request)) {
+    return json(
+      {
+        error: {
+          code: 'ORIGIN_FORBIDDEN',
+          message: 'Origin forbidden',
+        },
+      },
+      403
+    );
+  }
+
+  const auth = await requireLoggedInUser(request, env);
+  if (auth.error) return auth.error;
+
+  await env.DB
+    .prepare(`
+      DELETE FROM user_play_history
+      WHERE user_id = ?
+    `)
+    .bind(auth.user.user_id)
+    .run();
+
+  return json(
+    { ok: true },
+    200,
+    { 'cache-control': 'no-store' }
+  );
+}
+
+/* =========================================================
    Router
    ========================================================= */
 
@@ -785,6 +917,33 @@ export async function handleUserApi(
   env,
   url
 ) {
+  /*
+   * Playback History
+   */
+
+  if (
+    url.pathname === '/api/user/history' &&
+    request.method === 'GET'
+  ) {
+    return listPlayHistory(request, env, url);
+  }
+
+  if (
+    url.pathname === '/api/user/history' &&
+    request.method === 'DELETE'
+  ) {
+    return clearPlayHistory(request, env);
+  }
+
+  const historySongId = historySongIdFromPath(url.pathname);
+
+  if (
+    historySongId &&
+    request.method === 'POST'
+  ) {
+    return addPlayHistory(request, env, historySongId);
+  }
+
   /*
    * Favorites
    */

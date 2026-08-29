@@ -1,0 +1,9 @@
+{
+  "appId": "com.glory.melodymusic",
+  "appName": "Melody Music",
+  "webDir": "www",
+  "server": {
+    "url": "https://melody-music.gotoulus.workers.dev",
+    "cleartext": false
+  }
+}

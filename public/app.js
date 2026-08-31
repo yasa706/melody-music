@@ -1,6 +1,7 @@
 import { toAmplitudeSongs } from './player-data.js';
 
 let apiSongs = [];
+let apiAlbums = [];
 let currentLyrics = [];
 let lastLyricIndex = -2;
 let currentUser = null;
@@ -22,6 +23,18 @@ const lyricsEl = document.getElementById('lyrics');
 const statusEl = document.getElementById('playbackStatus');
 const searchInput = document.getElementById('searchInput');
 const songCountEl = document.getElementById('songCount');
+const albumCountEl = document.getElementById('albumCount');
+const albumsGridEl = document.getElementById('albumsGrid');
+const albumModal = document.getElementById('albumModal');
+const albumBackdrop = document.getElementById('albumBackdrop');
+const albumCloseButton = document.getElementById('albumCloseButton');
+const albumDetailCover = document.getElementById('albumDetailCover');
+const albumDetailTitle = document.getElementById('albumDetailTitle');
+const albumDetailArtist = document.getElementById('albumDetailArtist');
+const albumDetailDescription = document.getElementById('albumDetailDescription');
+const albumDetailCount = document.getElementById('albumDetailCount');
+const albumDetailSongs = document.getElementById('albumDetailSongs');
+
 
 const nowTitle = document.getElementById('nowTitle');
 const nowArtist = document.getElementById('nowArtist');
@@ -1530,6 +1543,99 @@ async function recordPlayHistory() {
 }
 
 /* =========================================================
+   Albums
+   ========================================================= */
+
+function renderAlbums() {
+  albumCountEl.textContent = `${apiAlbums.length} 张`;
+  if (!apiAlbums.length) {
+    albumsGridEl.innerHTML = '<div class="state-card album-state">后台还没有发布专辑</div>';
+    return;
+  }
+  albumsGridEl.innerHTML = apiAlbums.map((album) => {
+    const cover = album.cover_url
+      ? `<img class="album-card-cover" src="${esc(album.cover_url)}" alt="${esc(album.title)}" loading="lazy">`
+      : '<div class="album-cover-fallback">♫</div>';
+    return `<button class="album-card" type="button" data-album-id="${esc(album.id)}">
+      <span class="album-card-cover-wrap">${cover}</span>
+      <span class="album-card-title">${esc(album.title || '未命名专辑')}</span>
+      <span class="album-card-meta">${esc(album.artist || 'Melody Music')} · ${Number(album.song_count || 0)} 首</span>
+    </button>`;
+  }).join('');
+  albumsGridEl.querySelectorAll('[data-album-id]').forEach((button) => {
+    button.addEventListener('click', () => openAlbum(button.dataset.albumId));
+  });
+}
+
+function closeAlbum() {
+  albumModal.hidden = true;
+  document.body.style.overflow = '';
+}
+
+async function openAlbum(albumId) {
+  albumModal.hidden = false;
+  document.body.style.overflow = 'hidden';
+  albumDetailTitle.textContent = '正在加载…';
+  albumDetailArtist.textContent = '';
+  albumDetailDescription.textContent = '';
+  albumDetailCount.textContent = '0 首';
+  albumDetailCover.innerHTML = '♫';
+  albumDetailCover.classList.add('album-cover-fallback');
+  albumDetailSongs.innerHTML = '<div class="state-card">正在加载歌曲…</div>';
+  try {
+    const response = await fetch(`/api/albums/${encodeURIComponent(albumId)}`);
+    const payload = await readJson(response);
+    if (!response.ok) throw new Error('album');
+    const album = payload.album || {};
+    const songs = payload.songs || [];
+    albumDetailTitle.textContent = album.title || '未命名专辑';
+    albumDetailArtist.textContent = album.artist || 'Melody Music';
+    albumDetailDescription.textContent = album.description || '';
+    albumDetailCount.textContent = `${songs.length} 首`;
+    if (album.cover_url) {
+      albumDetailCover.classList.remove('album-cover-fallback');
+      albumDetailCover.innerHTML = `<img src="${esc(album.cover_url)}" alt="${esc(album.title || '')}">`;
+    }
+    if (!songs.length) {
+      albumDetailSongs.innerHTML = '<div class="state-card">这张专辑还没有发布歌曲</div>';
+      return;
+    }
+    albumDetailSongs.innerHTML = songs.map((song) => {
+      const globalIndex = apiSongs.findIndex((item) => String(item.id) === String(song.id));
+      const cover = song.cover_url
+        ? `<img class="song-cover" src="${esc(song.cover_url)}" alt="" loading="lazy">`
+        : '<div class="song-cover-fallback">♪</div>';
+      return `<button class="album-detail-song amplitude-play-pause" type="button" data-amplitude-song-index="${globalIndex}" data-song-index="${globalIndex}">
+        ${cover}<span class="song-info"><span class="song-title">${esc(song.title)}</span><span class="song-artist">${esc(song.artist)}</span></span><span class="song-duration">${formatDuration(song.duration_seconds)}</span>
+      </button>`;
+    }).join('');
+    window.Amplitude?.bindNewElements?.();
+  } catch {
+    albumDetailTitle.textContent = '专辑加载失败';
+    albumDetailSongs.innerHTML = '<div class="state-card">请稍后重试</div>';
+  }
+}
+
+albumCloseButton?.addEventListener('click', closeAlbum);
+albumBackdrop?.addEventListener('click', closeAlbum);
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape' && albumModal && !albumModal.hidden) closeAlbum();
+});
+
+async function initAlbums() {
+  try {
+    const response = await fetch('/api/albums');
+    if (!response.ok) throw new Error('albums');
+    const payload = await response.json();
+    apiAlbums = payload.albums || [];
+    renderAlbums();
+  } catch {
+    albumCountEl.textContent = '0 张';
+    albumsGridEl.innerHTML = '<div class="state-card album-state">专辑加载失败，请稍后重试</div>';
+  }
+}
+
+/* =========================================================
    Song List
    ========================================================= */
 
@@ -1559,6 +1665,7 @@ function renderCurrentSongList() {
       [
         song.title,
         song.artist,
+        song.album_name,
         song.album,
         song.category_name,
       ].some((value) =>
@@ -1960,6 +2067,7 @@ async function init() {
   renderUserState();
 
   await initPlayer();
+  await initAlbums();
   await loadCurrentUser();
 }
 

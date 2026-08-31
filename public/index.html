@@ -171,6 +171,20 @@
     </header>
 
 
+    <section class="albums-section" aria-labelledby="albumsTitle">
+      <div class="albums-heading">
+        <div>
+          <div class="brand-kicker">ALBUMS</div>
+          <h2 id="albumsTitle">专辑</h2>
+          <p>选择一张专辑，查看并播放其中的歌曲</p>
+        </div>
+        <span id="albumCount" class="count-chip">0 张</span>
+      </div>
+      <div id="albumsGrid" class="albums-grid">
+        <div class="state-card album-state">正在加载专辑…</div>
+      </div>
+    </section>
+
     <section
       class="music-layout"
       aria-label="音乐内容"
@@ -413,6 +427,24 @@
 
   </main>
 
+
+  <div id="albumModal" class="auth-modal" hidden>
+    <div id="albumBackdrop" class="auth-backdrop"></div>
+    <section class="auth-dialog album-detail-dialog" role="dialog" aria-modal="true" aria-labelledby="albumDetailTitle">
+      <button id="albumCloseButton" class="auth-close" type="button" aria-label="关闭">×</button>
+      <div class="album-detail-head">
+        <div id="albumDetailCover" class="album-detail-cover album-cover-fallback">♫</div>
+        <div class="album-detail-copy">
+          <div class="brand-kicker">ALBUM</div>
+          <h2 id="albumDetailTitle">专辑</h2>
+          <p id="albumDetailArtist" class="album-detail-artist"></p>
+          <p id="albumDetailDescription" class="album-detail-description"></p>
+          <span id="albumDetailCount" class="count-chip">0 首</span>
+        </div>
+      </div>
+      <div id="albumDetailSongs" class="album-detail-songs"><div class="state-card">正在加载歌曲…</div></div>
+    </section>
+  </div>
 
   <!-- =====================================================
        登录 / 注册弹窗

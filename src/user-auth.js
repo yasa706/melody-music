@@ -488,4 +488,3 @@ export async function handleUserLogout(
     }
   );
 }
-Commit changes

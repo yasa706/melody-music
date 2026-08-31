@@ -1,7 +1,7 @@
 import { json } from './http.js';
 
 const SESSION_COOKIE = 'melody_admin_session';
-const ITERATIONS = 100000;
+const ITERATIONS = 310000;
 const SESSION_DAYS = 7;
 
 function bytesToBase64(bytes) {

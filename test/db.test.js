@@ -30,3 +30,34 @@ test('category and playlist queries return results', async () => {
   assert.equal((await listCategories(db)).length, 1);
   assert.equal((await listPlaylists(db, true)).length, 1);
 });
+
+test('album queries return published albums and bind album id', async () => {
+  const calls = [];
+  let bound;
+  const db = {
+    prepare(sql) {
+      calls.push(sql);
+      return {
+        bind(v) { bound = v; return this; },
+        all: async () => ({ results: [{ id: 1, title: 'Album', song_count: 2 }] }),
+        first: async () => ({ id: bound, title: 'Album' }),
+      };
+    },
+  };
+  const mod = await import('../src/db.js');
+  const albums = await mod.listAlbums(db, true);
+  assert.equal(albums[0].title, 'Album');
+  assert.match(calls[0], /is_published\s*=\s*1/);
+  const album = await mod.getAlbumById(db, 9, true);
+  assert.equal(bound, 9);
+  assert.equal(album.id, 9);
+});
+
+test('album song query filters unpublished songs for public detail', async () => {
+  const calls = [];
+  const db = { prepare(sql) { calls.push(sql); return { bind(){ return this; }, all: async()=>({results:[]}) }; } };
+  const mod = await import('../src/db.js');
+  await mod.listAlbumSongs(db, 3, true);
+  assert.match(calls[0], /album_id\s*=\s*\?/);
+  assert.match(calls[0], /is_published\s*=\s*1/);
+});

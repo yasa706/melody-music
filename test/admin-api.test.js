@@ -16,3 +16,17 @@ test('category slug rule accepts lowercase kebab-case only', () => {
   assert.match('worship-music', /^[a-z0-9]+(?:-[a-z0-9]+)*$/);
   assert.doesNotMatch('Worship Music', /^[a-z0-9]+(?:-[a-z0-9]+)*$/);
 });
+
+test('song validation accepts optional album_id', () => {
+  const { value } = normalizeSong({ title:'T', artist:'A', album_id:'4', audio_type:'external', audio_url:'https://example.com/a.mp3', cover_type:'external' });
+  assert.equal(value.album_id, 4);
+});
+
+test('album validation trims fields and normalizes publication state', async () => {
+  const { normalizeAlbum } = await import('../src/admin-api.js');
+  const { value } = normalizeAlbum({ title:' Hope ', artist:' Choir ', cover_url:'https://example.com/c.jpg', description:' D ', is_published:true, sort_order:'2' });
+  assert.equal(value.title, 'Hope');
+  assert.equal(value.artist, 'Choir');
+  assert.equal(value.is_published, 1);
+  assert.equal(value.sort_order, 2);
+});

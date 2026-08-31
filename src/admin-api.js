@@ -21,6 +21,7 @@ function isHttpUrl(value) {
 export function normalizeSong(input = {}) {
   const out = {
     title: String(input.title || '').trim(), artist: String(input.artist || '').trim(), album: String(input.album || '').trim(),
+    album_id: input.album_id ? Number(input.album_id) : null,
     category_id: input.category_id ? Number(input.category_id) : null,
     audio_type: String(input.audio_type || ''), audio_url: String(input.audio_url || '').trim(),
     cover_type: String(input.cover_type || ''), cover_url: String(input.cover_url || '').trim(),
@@ -34,6 +35,21 @@ export function normalizeSong(input = {}) {
   if (out.audio_type === 'external' && !isHttpUrl(out.audio_url)) return { error: 'Audio URL must use http or https' };
   if (out.cover_type === 'external' && out.cover_url && !isHttpUrl(out.cover_url)) return { error: 'Cover URL must use http or https' };
   if (out.category_id !== null && !Number.isInteger(out.category_id)) return { error: 'Invalid category' };
+  if (out.album_id !== null && !Number.isInteger(out.album_id)) return { error: 'Invalid album' };
+  return { value: out };
+}
+
+export function normalizeAlbum(input = {}) {
+  const out = {
+    title: String(input.title || '').trim(),
+    artist: String(input.artist || '').trim(),
+    cover_url: String(input.cover_url || '').trim(),
+    description: String(input.description || '').trim(),
+    is_published: input.is_published ? 1 : 0,
+    sort_order: Math.max(0, Number.parseInt(input.sort_order || 0, 10) || 0),
+  };
+  if (!out.title) return { error: 'Album title is required' };
+  if (out.cover_url && !isHttpUrl(out.cover_url) && !out.cover_url.startsWith('/media/')) return { error: 'Cover URL must use http, https, or uploaded media' };
   return { value: out };
 }
 
@@ -118,6 +134,45 @@ async function handlePlaylists(request, env, url) {
   return json({error:{code:'METHOD_NOT_ALLOWED',message:'Method not allowed'}},405);
 }
 
+async function handleAlbums(request, env, url) {
+  const match = url.pathname.match(/^\/api\/admin\/albums(?:\/(\d+))?$/);
+  if (!match) return null;
+  const id = match[1] ? Number(match[1]) : null;
+  const mutation = ['POST','PUT','DELETE'].includes(request.method);
+  const auth = await authorize(request, env, mutation); if (auth.response) return auth.response;
+
+  if (request.method === 'GET' && !id) {
+    const { results = [] } = await env.DB.prepare(`SELECT a.*, COUNT(s.id) AS song_count FROM albums a LEFT JOIN songs s ON s.album_id=a.id GROUP BY a.id ORDER BY a.sort_order ASC, a.id DESC`).all();
+    return json({ albums: results }, 200, { 'cache-control': 'no-store' });
+  }
+  if (request.method === 'GET' && id) {
+    const album = await env.DB.prepare('SELECT * FROM albums WHERE id=?').bind(id).first();
+    if (!album) return json({ error:{ code:'NOT_FOUND', message:'Not found' } },404);
+    return json({ album }, 200, { 'cache-control':'no-store' });
+  }
+  if (request.method === 'POST' && !id) {
+    const body = await readJson(request); if (!body) return json({ error:{ code:'INVALID_JSON', message:'Invalid JSON' } },400);
+    const normalized = normalizeAlbum(body); if (normalized.error) return json({ error:{ code:'VALIDATION_ERROR', message:normalized.error } },400);
+    const a=normalized.value;
+    const r=await env.DB.prepare('INSERT INTO albums (title,artist,cover_url,description,is_published,sort_order) VALUES (?,?,?,?,?,?)').bind(a.title,a.artist,a.cover_url,a.description,a.is_published,a.sort_order).run();
+    const newId=Number(r.meta?.last_row_id||r.lastRowId);
+    return json({ album: await env.DB.prepare('SELECT * FROM albums WHERE id=?').bind(newId).first() },201);
+  }
+  if (request.method === 'PUT' && id) {
+    const existing=await env.DB.prepare('SELECT id FROM albums WHERE id=?').bind(id).first(); if(!existing) return json({error:{code:'NOT_FOUND',message:'Not found'}},404);
+    const body=await readJson(request); if(!body) return json({error:{code:'INVALID_JSON',message:'Invalid JSON'}},400);
+    const normalized=normalizeAlbum(body); if(normalized.error) return json({error:{code:'VALIDATION_ERROR',message:normalized.error}},400);
+    const a=normalized.value;
+    await env.DB.prepare('UPDATE albums SET title=?,artist=?,cover_url=?,description=?,is_published=?,sort_order=?,updated_at=CURRENT_TIMESTAMP WHERE id=?').bind(a.title,a.artist,a.cover_url,a.description,a.is_published,a.sort_order,id).run();
+    return json({ album: await env.DB.prepare('SELECT * FROM albums WHERE id=?').bind(id).first() });
+  }
+  if (request.method === 'DELETE' && id) {
+    await env.DB.prepare('DELETE FROM albums WHERE id=?').bind(id).run();
+    return new Response(null,{status:204});
+  }
+  return json({error:{code:'METHOD_NOT_ALLOWED',message:'Method not allowed'}},405);
+}
+
 export async function handleUpload(request, env) {
   const auth = await authorize(request, env, true); if (auth.response) return auth.response;
   try {
@@ -146,8 +201,9 @@ export async function handleAdminApi(request, env, url) {
       (SELECT COUNT(*) FROM songs WHERE is_published=1) AS published,
       (SELECT COUNT(*) FROM songs WHERE is_published=0) AS drafts,
       (SELECT COUNT(*) FROM playlists) AS playlists,
+      (SELECT COUNT(*) FROM albums) AS albums,
       (SELECT COUNT(*) FROM categories) AS categories`).first();
     return json({ dashboard: row }, 200, { 'cache-control': 'no-store' });
   }
-  return (await handleSongs(request, env, url)) || (await handleCategories(request, env, url)) || (await handlePlaylists(request, env, url));
+  return (await handleSongs(request, env, url)) || (await handleAlbums(request, env, url)) || (await handleCategories(request, env, url)) || (await handlePlaylists(request, env, url));
 }

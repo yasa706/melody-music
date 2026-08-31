@@ -84,18 +84,63 @@ button { cursor: pointer; }
 .album-card:hover .album-card-cover-wrap { transform:translateY(-3px); border-color:#48515d; }
 .album-card-title { margin-top:10px; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; font-weight:750; }
 .album-card-meta { margin-top:4px; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; color:var(--muted); font-size:12px; }
-.album-detail-dialog { width:min(760px,calc(100vw - 28px)); max-height:min(82vh,760px); overflow:auto; }
-.album-detail-head { display:grid; grid-template-columns:180px minmax(0,1fr); gap:22px; align-items:center; margin-bottom:20px; }
-.album-detail-cover { width:180px; height:180px; aspect-ratio:auto; overflow:hidden; }
-.album-detail-cover img { width:100%; height:100%; object-fit:cover; border-radius:16px; }
-.album-detail-copy h2 { margin:6px 0 0; font-size:28px; }
-.album-detail-artist { margin:7px 0 0; color:#cbd2da; }
-.album-detail-description { margin:10px 0 14px; color:var(--muted); line-height:1.55; }
-.album-detail-songs { display:grid; gap:8px; }
-.album-detail-song { display:grid; grid-template-columns:44px minmax(0,1fr) auto; align-items:center; gap:11px; width:100%; padding:8px 10px; border:1px solid transparent; border-radius:12px; background:transparent; color:inherit; text-align:left; }
-.album-detail-song:hover { background:var(--panel-soft); }
-.album-detail-song .song-cover,.album-detail-song .song-cover-fallback { width:44px; height:44px; }
-@media(max-width:760px){.albums-section{padding:16px}.albums-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}.album-detail-head{grid-template-columns:110px minmax(0,1fr);gap:15px}.album-detail-cover{width:110px;height:110px}.album-detail-copy h2{font-size:22px}.album-detail-description{display:none}}
+.album-modal .album-backdrop { background:rgba(5,8,12,.82); backdrop-filter:blur(18px); }
+.album-detail-dialog {
+  width:min(1080px,calc(100vw - 36px));
+  max-height:min(88vh,860px);
+  overflow:hidden;
+  padding:0;
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:28px;
+  background:linear-gradient(145deg,rgba(25,31,39,.98),rgba(14,18,24,.98));
+  box-shadow:0 30px 90px rgba(0,0,0,.5);
+}
+.album-close { z-index:5; top:18px; right:18px; background:rgba(255,255,255,.06); }
+.album-detail-layout { display:grid; grid-template-columns:minmax(320px,.9fr) minmax(390px,1.1fr); min-height:610px; }
+.album-hero-panel { padding:48px 42px 34px; border-right:1px solid rgba(255,255,255,.08); background:radial-gradient(circle at 30% 20%,rgba(38,208,124,.11),transparent 38%); }
+.album-detail-cover { width:min(100%,360px); aspect-ratio:1; overflow:hidden; border-radius:22px; box-shadow:0 22px 55px rgba(0,0,0,.35); }
+.album-detail-cover img { width:100%; height:100%; object-fit:cover; border-radius:22px; }
+.album-player-copy { margin-top:26px; }
+.album-player-copy h3 { margin:7px 0 4px; font-size:25px; line-height:1.2; }
+.album-player-copy p { margin:0; color:var(--muted); }
+.album-player-progress { margin-top:24px; }
+.album-player-time-row { display:flex; justify-content:space-between; margin-bottom:7px; color:#8e98a6; font-size:12px; }
+.album-player-progress input { width:100%; accent-color:#2fd884; }
+.album-player-controls { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:24px; }
+.album-control-button,.album-play-button { border:0; color:#e8edf2; background:transparent; cursor:pointer; }
+.album-control-button { width:44px; height:44px; border-radius:50%; font-size:18px; }
+.album-control-button:hover { background:rgba(255,255,255,.06); }
+.album-play-button { width:70px; height:70px; border-radius:50%; display:grid; place-items:center; font-size:25px; background:linear-gradient(145deg,#35e28d,#19b96c); color:#07130d; box-shadow:0 12px 30px rgba(32,210,124,.25); }
+.album-play-button.amplitude-playing .album-play-icon::before { content:'Ⅱ'; }
+.album-play-button.amplitude-playing .album-play-icon { font-size:0; }
+.album-play-button.amplitude-playing .album-play-icon::before { font-size:25px; }
+.album-content-panel { min-width:0; padding:48px 38px 34px; overflow:auto; }
+.album-detail-head { margin:0 0 26px; padding-right:48px; }
+.album-detail-copy h2 { margin:6px 0 0; font-size:34px; letter-spacing:-.02em; }
+.album-detail-artist { margin:7px 0 0; color:#cbd2da; font-size:17px; }
+.album-meta-line { margin-top:13px; }
+.album-detail-description { margin:14px 0 0; color:var(--muted); line-height:1.6; }
+.album-track-heading { display:grid; grid-template-columns:1fr auto; gap:16px; padding:0 14px 10px; border-bottom:1px solid rgba(255,255,255,.08); color:#7f8996; font-size:12px; }
+.album-detail-songs { display:grid; gap:8px; margin-top:10px; }
+.album-detail-song { display:grid; grid-template-columns:34px minmax(0,1fr) auto; align-items:center; gap:12px; width:100%; padding:13px 14px; border:1px solid transparent; border-radius:14px; background:transparent; color:inherit; text-align:left; transition:background .16s ease,border-color .16s ease,transform .16s ease; }
+.album-detail-song:hover { background:rgba(255,255,255,.045); transform:translateX(2px); }
+.album-detail-song.album-song-active { background:linear-gradient(90deg,rgba(33,211,126,.14),rgba(33,211,126,.035)); border-color:rgba(33,211,126,.16); }
+.album-track-number { color:#7f8996; text-align:center; font-variant-numeric:tabular-nums; }
+.album-detail-song.album-song-active .album-track-number,.album-detail-song.album-song-active .song-title { color:#35db89; }
+.album-detail-song .song-duration { color:#89939f; font-variant-numeric:tabular-nums; }
+@media(max-width:760px){
+  .albums-section{padding:16px}.albums-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+  .album-detail-dialog{width:min(100vw - 16px,620px);max-height:92vh;border-radius:22px;overflow:auto}
+  .album-detail-layout{display:block;min-height:0}
+  .album-hero-panel{padding:28px 20px 24px;border-right:0;border-bottom:1px solid rgba(255,255,255,.08)}
+  .album-detail-cover{width:min(72vw,290px);margin:0 auto}
+  .album-player-copy{text-align:center;margin-top:18px}.album-player-copy h3{font-size:22px}
+  .album-player-controls{max-width:360px;margin:20px auto 0}.album-play-button{width:62px;height:62px}
+  .album-content-panel{padding:26px 16px 24px;overflow:visible}.album-detail-head{padding-right:32px;margin-bottom:18px}
+  .album-detail-copy h2{font-size:27px}.album-detail-description{display:block;font-size:13px}
+  .album-detail-song{grid-template-columns:30px minmax(0,1fr) auto;padding:12px 10px}.album-track-heading{padding-left:10px;padding-right:10px}
+}
+
 
 .music-layout {
   display: grid;

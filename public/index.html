@@ -428,21 +428,47 @@
   </main>
 
 
-  <div id="albumModal" class="auth-modal" hidden>
-    <div id="albumBackdrop" class="auth-backdrop"></div>
+  <div id="albumModal" class="auth-modal album-modal" hidden>
+    <div id="albumBackdrop" class="auth-backdrop album-backdrop"></div>
     <section class="auth-dialog album-detail-dialog" role="dialog" aria-modal="true" aria-labelledby="albumDetailTitle">
-      <button id="albumCloseButton" class="auth-close" type="button" aria-label="关闭">×</button>
-      <div class="album-detail-head">
-        <div id="albumDetailCover" class="album-detail-cover album-cover-fallback">♫</div>
-        <div class="album-detail-copy">
-          <div class="brand-kicker">ALBUM</div>
-          <h2 id="albumDetailTitle">专辑</h2>
-          <p id="albumDetailArtist" class="album-detail-artist"></p>
-          <p id="albumDetailDescription" class="album-detail-description"></p>
-          <span id="albumDetailCount" class="count-chip">0 首</span>
+      <button id="albumCloseButton" class="auth-close album-close" type="button" aria-label="关闭">×</button>
+      <div class="album-detail-layout">
+        <div class="album-hero-panel">
+          <div id="albumDetailCover" class="album-detail-cover album-cover-fallback">♫</div>
+          <div class="album-player-copy">
+            <div class="brand-kicker">NOW PLAYING</div>
+            <h3 id="albumPlayerTitle">选择一首歌曲</h3>
+            <p id="albumPlayerArtist">Melody Music</p>
+          </div>
+          <div class="album-player-progress">
+            <div class="album-player-time-row">
+              <span><span class="amplitude-current-minutes">00</span>:<span class="amplitude-current-seconds">00</span></span>
+              <span><span class="amplitude-duration-minutes">00</span>:<span class="amplitude-duration-seconds">00</span></span>
+            </div>
+            <input class="amplitude-song-slider" type="range" min="0" max="100" value="0" aria-label="播放进度">
+          </div>
+          <div class="album-player-controls" aria-label="专辑播放器控制">
+            <button class="album-control-button amplitude-shuffle" type="button" aria-label="随机播放">⌘</button>
+            <button class="album-control-button amplitude-prev" type="button" aria-label="上一首">◀</button>
+            <button class="album-play-button amplitude-play-pause" type="button" aria-label="播放或暂停"><span class="album-play-icon">▶</span></button>
+            <button class="album-control-button amplitude-next" type="button" aria-label="下一首">▶</button>
+            <button class="album-control-button amplitude-repeat" type="button" aria-label="循环播放">↻</button>
+          </div>
+        </div>
+        <div class="album-content-panel">
+          <div class="album-detail-head">
+            <div class="album-detail-copy">
+              <div class="brand-kicker">ALBUM</div>
+              <h2 id="albumDetailTitle">专辑</h2>
+              <p id="albumDetailArtist" class="album-detail-artist"></p>
+              <div class="album-meta-line"><span id="albumDetailCount" class="count-chip">0 首</span></div>
+              <p id="albumDetailDescription" class="album-detail-description"></p>
+            </div>
+          </div>
+          <div class="album-track-heading"><span>专辑歌曲</span><span>时长</span></div>
+          <div id="albumDetailSongs" class="album-detail-songs"><div class="state-card">正在加载歌曲…</div></div>
         </div>
       </div>
-      <div id="albumDetailSongs" class="album-detail-songs"><div class="state-card">正在加载歌曲…</div></div>
     </section>
   </div>
 

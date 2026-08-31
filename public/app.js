@@ -34,6 +34,9 @@ const albumDetailArtist = document.getElementById('albumDetailArtist');
 const albumDetailDescription = document.getElementById('albumDetailDescription');
 const albumDetailCount = document.getElementById('albumDetailCount');
 const albumDetailSongs = document.getElementById('albumDetailSongs');
+const albumPlayerTitle = document.getElementById('albumPlayerTitle');
+const albumPlayerArtist = document.getElementById('albumPlayerArtist');
+let androidAudioBoost = null;
 
 
 const nowTitle = document.getElementById('nowTitle');
@@ -1600,16 +1603,14 @@ async function openAlbum(albumId) {
       albumDetailSongs.innerHTML = '<div class="state-card">这张专辑还没有发布歌曲</div>';
       return;
     }
-    albumDetailSongs.innerHTML = songs.map((song) => {
+    albumDetailSongs.innerHTML = songs.map((song, index) => {
       const globalIndex = apiSongs.findIndex((item) => String(item.id) === String(song.id));
-      const cover = song.cover_url
-        ? `<img class="song-cover" src="${esc(song.cover_url)}" alt="" loading="lazy">`
-        : '<div class="song-cover-fallback">♪</div>';
       return `<button class="album-detail-song amplitude-play-pause" type="button" data-amplitude-song-index="${globalIndex}" data-song-index="${globalIndex}">
-        ${cover}<span class="song-info"><span class="song-title">${esc(song.title)}</span><span class="song-artist">${esc(song.artist)}</span></span><span class="song-duration">${formatDuration(song.duration_seconds)}</span>
+        <span class="album-track-number">${String(index + 1).padStart(2, '0')}</span><span class="song-info"><span class="song-title">${esc(song.title)}</span><span class="song-artist">${esc(song.artist)}</span></span><span class="song-duration">${formatDuration(song.duration_seconds)}</span>
       </button>`;
     }).join('');
     window.Amplitude?.bindNewElements?.();
+    syncAlbumPlayer();
   } catch {
     albumDetailTitle.textContent = '专辑加载失败';
     albumDetailSongs.innerHTML = '<div class="state-card">请稍后重试</div>';
@@ -1923,6 +1924,7 @@ function syncNowPlaying() {
 
   renderLyrics();
   highlightActiveRow();
+  syncAlbumPlayer();
 }
 
 function highlightActiveRow() {
@@ -1939,6 +1941,54 @@ function highlightActiveRow() {
         row.dataset.songIndex === active
       );
     });
+}
+
+function highlightAlbumRows() {
+  const active = String(window.Amplitude?.getActiveIndex?.() ?? '');
+  albumDetailSongs?.querySelectorAll('.album-detail-song').forEach((row) => {
+    row.classList.toggle('album-song-active', row.dataset.songIndex === active);
+  });
+}
+
+function syncAlbumPlayer() {
+  const song = window.Amplitude?.getActiveSongMetadata?.() || {};
+  if (albumPlayerTitle) albumPlayerTitle.textContent = song.name || '选择一首歌曲';
+  if (albumPlayerArtist) albumPlayerArtist.textContent = song.artist || 'Melody Music';
+  highlightAlbumRows();
+}
+
+function isAndroidNativeWebView() {
+  const capacitorNative = Boolean(window.Capacitor?.isNativePlatform?.());
+  const androidWebView = /Android/i.test(navigator.userAgent) && /; wv\)|Version\/\d+\.\d+ Chrome\//i.test(navigator.userAgent);
+  return capacitorNative || androidWebView;
+}
+
+function configureAndroidAudioBoost() {
+  const audio = window.Amplitude.getAudio();
+  if (!audio) return;
+  audio.volume = 1;
+  if (!isAndroidNativeWebView() || androidAudioBoost) return;
+
+  try {
+    const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextCtor) return;
+    const context = new AudioContextCtor();
+    const source = context.createMediaElementSource(audio);
+    const gain = context.createGain();
+    const compressor = context.createDynamicsCompressor();
+    gain.gain.value = 1.45;
+    compressor.threshold.value = -8;
+    compressor.knee.value = 18;
+    compressor.ratio.value = 4;
+    compressor.attack.value = 0.006;
+    compressor.release.value = 0.2;
+    source.connect(gain);
+    gain.connect(compressor);
+    compressor.connect(context.destination);
+    androidAudioBoost = { context, gain, compressor };
+  } catch (error) {
+    console.warn('Android audio boost unavailable; using full media volume.', error);
+  }
 }
 
 function syncLyrics() {
@@ -2027,7 +2077,7 @@ async function initPlayer() {
     window.Amplitude.init({
       songs: toAmplitudeSongs(apiSongs),
       start_song: 0,
-      volume: 0.8,
+      volume: 1.0,
       continue_next: true,
       preload: 'metadata',
 
@@ -2038,11 +2088,17 @@ async function initPlayer() {
 
         play: () => {
           statusEl.textContent = '';
+          configureAndroidAudioBoost();
+          androidAudioBoost?.context?.resume?.().catch(() => {});
           highlightActiveRow();
+          syncAlbumPlayer();
           recordPlayHistory().catch(() => {});
         },
 
-        pause: highlightActiveRow,
+        pause: () => {
+          highlightActiveRow();
+          syncAlbumPlayer();
+        },
 
         error: () => {
           statusEl.textContent =
@@ -2052,6 +2108,7 @@ async function initPlayer() {
     });
 
     renderCurrentSongList();
+    configureAndroidAudioBoost();
 
     syncNowPlaying();
   } catch {

@@ -30,3 +30,9 @@ test('album validation trims fields and normalizes publication state', async () 
   assert.equal(value.is_published, 1);
   assert.equal(value.sort_order, 2);
 });
+
+test('album validation preserves selected song ids', async () => {
+  const { normalizeAlbum } = await import('../src/admin-api.js');
+  const { value } = normalizeAlbum({ title:'Hope', song_ids:['2','5','bad',5] });
+  assert.deepEqual(value.song_ids, [2,5,5]);
+});

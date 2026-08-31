@@ -47,6 +47,7 @@ export function normalizeAlbum(input = {}) {
     description: String(input.description || '').trim(),
     is_published: input.is_published ? 1 : 0,
     sort_order: Math.max(0, Number.parseInt(input.sort_order || 0, 10) || 0),
+    song_ids: Array.isArray(input.song_ids) ? input.song_ids.map(Number).filter(Number.isInteger) : [],
   };
   if (!out.title) return { error: 'Album title is required' };
   if (out.cover_url && !isHttpUrl(out.cover_url) && !out.cover_url.startsWith('/media/')) return { error: 'Cover URL must use http, https, or uploaded media' };
@@ -76,8 +77,8 @@ async function handleSongs(request, env, url) {
     const body = await readJson(request); if (!body) return json({ error: { code: 'INVALID_JSON', message: 'Invalid JSON' } }, 400);
     const normalized = normalizeSong(body); if (normalized.error) return json({ error: { code: 'VALIDATION_ERROR', message: normalized.error } }, 400);
     const s = normalized.value;
-    const result = await env.DB.prepare(`INSERT INTO songs (title,artist,album,category_id,audio_type,audio_url,cover_type,cover_url,lyrics_lrc,duration_seconds,is_published,sort_order) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`)
-      .bind(s.title,s.artist,s.album,s.category_id,s.audio_type,s.audio_url,s.cover_type,s.cover_url,s.lyrics_lrc,s.duration_seconds,s.is_published,s.sort_order).run();
+    const result = await env.DB.prepare(`INSERT INTO songs (title,artist,album,album_id,category_id,audio_type,audio_url,cover_type,cover_url,lyrics_lrc,duration_seconds,is_published,sort_order) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`)
+      .bind(s.title,s.artist,s.album,s.album_id,s.category_id,s.audio_type,s.audio_url,s.cover_type,s.cover_url,s.lyrics_lrc,s.duration_seconds,s.is_published,s.sort_order).run();
     const newId = Number(result.meta?.last_row_id || result.lastRowId);
     await replaceSongPlaylists(env.DB, newId, s.playlist_ids);
     return json({ song: await getSongById(env.DB, newId) }, 201);
@@ -87,8 +88,8 @@ async function handleSongs(request, env, url) {
     const body = await readJson(request); if (!body) return json({ error: { code: 'INVALID_JSON', message: 'Invalid JSON' } }, 400);
     const normalized = normalizeSong(body); if (normalized.error) return json({ error: { code: 'VALIDATION_ERROR', message: normalized.error } }, 400);
     const s = normalized.value;
-    await env.DB.prepare(`UPDATE songs SET title=?,artist=?,album=?,category_id=?,audio_type=?,audio_url=?,cover_type=?,cover_url=?,lyrics_lrc=?,duration_seconds=?,is_published=?,sort_order=?,updated_at=CURRENT_TIMESTAMP WHERE id=?`)
-      .bind(s.title,s.artist,s.album,s.category_id,s.audio_type,s.audio_url,s.cover_type,s.cover_url,s.lyrics_lrc,s.duration_seconds,s.is_published,s.sort_order,id).run();
+    await env.DB.prepare(`UPDATE songs SET title=?,artist=?,album=?,album_id=?,category_id=?,audio_type=?,audio_url=?,cover_type=?,cover_url=?,lyrics_lrc=?,duration_seconds=?,is_published=?,sort_order=?,updated_at=CURRENT_TIMESTAMP WHERE id=?`)
+      .bind(s.title,s.artist,s.album,s.album_id,s.category_id,s.audio_type,s.audio_url,s.cover_type,s.cover_url,s.lyrics_lrc,s.duration_seconds,s.is_published,s.sort_order,id).run();
     await replaceSongPlaylists(env.DB, id, s.playlist_ids);
     return json({ song: await getSongById(env.DB, id) });
   }
@@ -134,6 +135,13 @@ async function handlePlaylists(request, env, url) {
   return json({error:{code:'METHOD_NOT_ALLOWED',message:'Method not allowed'}},405);
 }
 
+async function replaceAlbumSongs(db, albumId, songIds = []) {
+  const ids = songIds.map(Number).filter(Number.isInteger);
+  const stmts = [db.prepare('UPDATE songs SET album_id=NULL WHERE album_id=?').bind(albumId)];
+  ids.forEach(songId => stmts.push(db.prepare('UPDATE songs SET album_id=? WHERE id=?').bind(albumId, songId)));
+  if (db.batch) await db.batch(stmts); else for (const st of stmts) await st.run();
+}
+
 async function handleAlbums(request, env, url) {
   const match = url.pathname.match(/^\/api\/admin\/albums(?:\/(\d+))?$/);
   if (!match) return null;
@@ -148,6 +156,8 @@ async function handleAlbums(request, env, url) {
   if (request.method === 'GET' && id) {
     const album = await env.DB.prepare('SELECT * FROM albums WHERE id=?').bind(id).first();
     if (!album) return json({ error:{ code:'NOT_FOUND', message:'Not found' } },404);
+    const { results = [] } = await env.DB.prepare('SELECT id FROM songs WHERE album_id=? ORDER BY sort_order ASC, id ASC').bind(id).all();
+    album.song_ids = results.map(row => row.id);
     return json({ album }, 200, { 'cache-control':'no-store' });
   }
   if (request.method === 'POST' && !id) {
@@ -156,7 +166,10 @@ async function handleAlbums(request, env, url) {
     const a=normalized.value;
     const r=await env.DB.prepare('INSERT INTO albums (title,artist,cover_url,description,is_published,sort_order) VALUES (?,?,?,?,?,?)').bind(a.title,a.artist,a.cover_url,a.description,a.is_published,a.sort_order).run();
     const newId=Number(r.meta?.last_row_id||r.lastRowId);
-    return json({ album: await env.DB.prepare('SELECT * FROM albums WHERE id=?').bind(newId).first() },201);
+    await replaceAlbumSongs(env.DB, newId, a.song_ids);
+    const album = await env.DB.prepare('SELECT * FROM albums WHERE id=?').bind(newId).first();
+    album.song_ids = a.song_ids;
+    return json({ album },201);
   }
   if (request.method === 'PUT' && id) {
     const existing=await env.DB.prepare('SELECT id FROM albums WHERE id=?').bind(id).first(); if(!existing) return json({error:{code:'NOT_FOUND',message:'Not found'}},404);
@@ -164,7 +177,10 @@ async function handleAlbums(request, env, url) {
     const normalized=normalizeAlbum(body); if(normalized.error) return json({error:{code:'VALIDATION_ERROR',message:normalized.error}},400);
     const a=normalized.value;
     await env.DB.prepare('UPDATE albums SET title=?,artist=?,cover_url=?,description=?,is_published=?,sort_order=?,updated_at=CURRENT_TIMESTAMP WHERE id=?').bind(a.title,a.artist,a.cover_url,a.description,a.is_published,a.sort_order,id).run();
-    return json({ album: await env.DB.prepare('SELECT * FROM albums WHERE id=?').bind(id).first() });
+    await replaceAlbumSongs(env.DB, id, a.song_ids);
+    const album = await env.DB.prepare('SELECT * FROM albums WHERE id=?').bind(id).first();
+    album.song_ids = a.song_ids;
+    return json({ album });
   }
   if (request.method === 'DELETE' && id) {
     await env.DB.prepare('DELETE FROM albums WHERE id=?').bind(id).run();

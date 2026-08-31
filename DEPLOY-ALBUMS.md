@@ -32,3 +32,10 @@ npx wrangler d1 execute melody-music-db --remote --file=migrations/0004_albums.s
 ## 兼容说明
 
 旧歌曲不会被删除。原来的 `songs.album` 文字字段仍保留，新的正式专辑关系使用 `songs.album_id`。没有加入专辑的旧歌曲仍然会继续显示和播放。
+
+## 2026-08-31 专辑歌曲修复
+
+- 后台“专辑 → 编辑/新增”现在可直接多选歌曲。
+- 保存专辑会更新 `songs.album_id`；取消选择会把歌曲从该专辑移出。
+- 后台“歌曲 → 编辑 → 所属专辑”也会正确保存 `album_id`。
+- 本次修复不需要再次执行 D1 migration；`0004_albums.sql` 已执行过即可。

@@ -20,3 +20,9 @@ test('album rows are highlighted with the active Amplitude song', () => {
   assert.match(app, /album-song-active/);
   assert.match(app, /syncAlbumPlayer/);
 });
+
+test('desktop album dialog overrides generic auth dialog sizing without changing mobile layout', () => {
+  assert.match(css, /@media\s*\(min-width:\s*761px\)[\s\S]*?\.album-modal\s+\.album-detail-dialog\s*\{/);
+  assert.match(css, /\.album-modal\s+\.album-detail-dialog\s*\{[\s\S]*?width:\s*min\(1080px,\s*calc\(100vw\s*-\s*36px\)\)/);
+  assert.match(css, /\.album-modal\s+\.album-detail-dialog\s*\{[\s\S]*?padding:\s*0/);
+});

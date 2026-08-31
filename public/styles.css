@@ -1320,3 +1320,18 @@ input[type="range"] { accent-color: var(--accent); }
     font-size: 12px;
   }
 }
+
+/* Desktop-only album dialog sizing fix.
+   Keep the existing mobile album layout unchanged. */
+@media (min-width: 761px) {
+  .album-modal .album-detail-dialog {
+    width: min(1080px, calc(100vw - 36px));
+    max-height: min(88vh, 860px);
+    overflow: hidden;
+    padding: 0;
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 28px;
+    background: linear-gradient(145deg, rgba(25,31,39,.98), rgba(14,18,24,.98));
+    box-shadow: 0 30px 90px rgba(0,0,0,.5);
+  }
+}

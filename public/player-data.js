@@ -1,7 +1,12 @@
 import './lyrics-fallback.js';
 import './ios-app.js';
+import './ios-playback-runtime.js';
 
 export function toAmplitudeSongs(rows = []) {
+  if (typeof window !== 'undefined') {
+    window.MelodyPublicSongs = rows;
+  }
+
   return rows.map((song) => ({
     name: String(song?.title || '未命名歌曲'),
     artist: String(song?.artist || '未知歌手'),

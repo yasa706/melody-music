@@ -16,18 +16,17 @@ test('iOS mobile stylesheet contains required app chrome hooks', () => {
   }
 });
 
-test('public page contains the approved iPhone navigation and player hooks', () => {
-  const html = fs.readFileSync('public/index.html', 'utf8');
+test('iOS controller exposes the approved four-tab navigation', () => {
+  const source = fs.readFileSync('public/ios-app.js', 'utf8');
   for (const tab of ['home', 'albums', 'search', 'my']) {
-    assert.match(html, new RegExp(`data-ios-tab=["']${tab}["']`));
+    assert.match(source, new RegExp(`data-ios-tab=["']${tab}["']`));
   }
-  assert.match(html, /id=["']ios-mini-player["']/);
-  assert.match(html, /id=["']ios-now-playing["']/);
-  assert.match(html, /id=["']iosBottomNav["']/);
+  assert.match(source, /id\s*=\s*['"]iosBottomNav['"]/);
 });
 
-test('iOS controller activates existing static app chrome instead of duplicating it', () => {
+test('iOS controller reuses the existing mini-player and full Now Playing view', () => {
   const source = fs.readFileSync('public/ios-app.js', 'utf8');
-  assert.match(source, /getElementById\?\.\(['"]iosBottomNav['"]\)/);
-  assert.match(source, /removeAttribute\(['"]hidden['"]\)/);
+  assert.match(source, /querySelector\?\.\(['"]\.player-song['"]\)/);
+  assert.match(source, /querySelector\?\.\(['"]\.now-panel['"]\)/);
+  assert.match(source, /scrollIntoView/);
 });

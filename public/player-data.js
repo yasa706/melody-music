@@ -1,3 +1,5 @@
+import './lyrics-fallback.js';
+
 export function toAmplitudeSongs(rows = []) {
   return rows.map((song) => ({
     name: String(song?.title || '未命名歌曲'),

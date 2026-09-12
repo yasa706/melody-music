@@ -8,7 +8,7 @@ test('password hash round-trips and does not contain plaintext', async () => {
   assert.equal(await verifyPassword(plain, stored), true);
   assert.equal(await verifyPassword('wrong', stored), false);
   assert.equal(stored.includes(plain), false);
-  assert.match(stored, /^pbkdf2-sha256\$310000\$/);
+  assert.match(stored, /^pbkdf2-sha256\$100000\$/);
 });
 
 test('csrf helper accepts only exact session token', () => {

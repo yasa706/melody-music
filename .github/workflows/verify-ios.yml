@@ -19,8 +19,12 @@ jobs:
         with:
           node-version: 22
 
-      - name: Run web and configuration tests
-        run: npm test
+      - name: Run iOS web and configuration tests
+        run: |
+          node --test test/ios-config.test.mjs
+          node --test test/ios-bridge.test.mjs
+          node --test test/ios-mobile-ui.test.mjs
+          node --test test/ios-release.test.mjs
 
       - name: Install iOS dependencies
         working-directory: ios-app

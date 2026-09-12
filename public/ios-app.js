@@ -84,6 +84,24 @@ export function createMelodyIOSAudio({
   });
 }
 
+function installLegalLinks(doc) {
+  const userMenu = doc.getElementById?.('userMenu');
+  if (userMenu && !userMenu.querySelector?.('.ios-legal-links')) {
+    const links = doc.createElement('div');
+    links.className = 'ios-legal-links';
+    links.innerHTML = '<a href="/privacy.html">隐私政策</a><a href="/terms.html">用户协议</a>';
+    userMenu.appendChild(links);
+  }
+
+  const authDialog = doc.querySelector?.('.auth-dialog');
+  if (authDialog && !authDialog.querySelector?.('.ios-auth-legal')) {
+    const links = doc.createElement('p');
+    links.className = 'ios-auth-legal';
+    links.innerHTML = '继续使用即表示你同意 <a href="/terms.html">用户协议</a> 和 <a href="/privacy.html">隐私政策</a>。';
+    authDialog.appendChild(links);
+  }
+}
+
 export function installIOSChrome(doc = globalThis.document) {
   if (!doc?.documentElement || !doc?.body) return false;
   if (doc.getElementById?.('iosBottomNav')) return true;
@@ -97,6 +115,8 @@ export function installIOSChrome(doc = globalThis.document) {
     link.dataset.iosMobileStyle = 'true';
     doc.head?.appendChild(link);
   }
+
+  installLegalLinks(doc);
 
   const nav = doc.createElement('nav');
   nav.id = 'iosBottomNav';

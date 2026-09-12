@@ -7,5 +7,7 @@ export function toAmplitudeSongs(rows = []) {
     cover_art_url: String(song?.cover_url || ''),
     melody_id: song?.id ?? null,
     lyrics_lrc: String(song?.lyrics_lrc || ''),
+    lyricist: String(song?.lyricist || ''),
+    composer: String(song?.composer || ''),
   }));
 }

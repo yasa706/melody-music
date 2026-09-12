@@ -19,3 +19,10 @@ test('song create and update SQL persist album_id', async () => {
   assert.match(source, /INSERT INTO songs \([^)]*album_id/);
   assert.match(source, /UPDATE songs SET[^`]*album_id=\?/);
 });
+
+test('song editor offers all supported audio upload formats', () => {
+  assert.match(adminJs, /上传音频/);
+  for (const ext of ['.mp3', '.m4a', '.aac', '.wav', '.ogg', '.opus', '.flac']) {
+    assert.match(adminJs, new RegExp(ext.replace('.', '\\.')));
+  }
+});

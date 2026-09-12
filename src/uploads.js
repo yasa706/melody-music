@@ -1,5 +1,13 @@
 const LIMITS = { audio: 50 * 1024 * 1024, cover: 8 * 1024 * 1024, lyrics: 1 * 1024 * 1024 };
-const AUDIO_MIME = new Set(['audio/mpeg', 'audio/mp3']);
+const AUDIO_FORMATS = new Map([
+  ['mp3', new Set(['audio/mpeg', 'audio/mp3'])],
+  ['m4a', new Set(['audio/mp4', 'audio/x-m4a', 'video/mp4'])],
+  ['aac', new Set(['audio/aac', 'audio/x-aac'])],
+  ['wav', new Set(['audio/wav', 'audio/x-wav', 'audio/wave'])],
+  ['ogg', new Set(['audio/ogg', 'application/ogg'])],
+  ['opus', new Set(['audio/opus', 'audio/ogg', 'application/ogg'])],
+  ['flac', new Set(['audio/flac', 'audio/x-flac'])],
+]);
 const COVER_MIME = new Set(['image/jpeg', 'image/png', 'image/webp']);
 const LYRICS_MIME = new Set(['text/plain', 'application/octet-stream']);
 
@@ -13,14 +21,24 @@ export function validateUpload(file, kind) {
   if (file.size > LIMITS[kind]) throw new UploadError(413, 'FILE_TOO_LARGE', 'File is too large');
   const name = String(file.name || '').toLowerCase();
   const type = String(file.type || '').toLowerCase();
-  if (kind === 'audio' && !(AUDIO_MIME.has(type) && name.endsWith('.mp3'))) throw new UploadError(415, 'INVALID_FILE_TYPE', 'Only MP3 audio is allowed');
+  if (kind === 'audio') {
+    const ext = name.includes('.') ? name.split('.').pop() : '';
+    const allowedMime = AUDIO_FORMATS.get(ext);
+    if (!allowedMime || !allowedMime.has(type)) {
+      throw new UploadError(415, 'INVALID_FILE_TYPE', 'Supported audio formats: MP3, M4A, AAC, WAV, OGG, Opus, FLAC');
+    }
+  }
   if (kind === 'cover' && !COVER_MIME.has(type)) throw new UploadError(415, 'INVALID_FILE_TYPE', 'Only JPEG, PNG or WebP images are allowed');
   if (kind === 'lyrics' && !(LYRICS_MIME.has(type) && name.endsWith('.lrc'))) throw new UploadError(415, 'INVALID_FILE_TYPE', 'Only LRC lyrics are allowed');
   return true;
 }
 
 function extFor(file, kind) {
-  if (kind === 'audio') return 'mp3';
+  if (kind === 'audio') {
+    const name = String(file.name || '').toLowerCase();
+    const ext = name.includes('.') ? name.split('.').pop() : '';
+    return AUDIO_FORMATS.has(ext) ? ext : 'mp3';
+  }
   if (kind === 'lyrics') return 'lrc';
   if (file.type === 'image/png') return 'png';
   if (file.type === 'image/webp') return 'webp';

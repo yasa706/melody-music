@@ -15,3 +15,10 @@ test('iOS app chrome exposes privacy and terms links', () => {
   assert.match(source, /href=["']\/privacy\.html["']/);
   assert.match(source, /href=["']\/terms\.html["']/);
 });
+
+test('iOS account menu exposes in-app account deletion', () => {
+  const source = fs.readFileSync('public/ios-app.js', 'utf8');
+  assert.match(source, /删除账号/);
+  assert.match(source, /\/api\/auth\/account/);
+  assert.match(source, /method:\s*['"]DELETE['"]/);
+});

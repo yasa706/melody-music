@@ -1,4 +1,5 @@
 import './lyrics-fallback.js';
+import './ios-app.js';
 
 export function toAmplitudeSongs(rows = []) {
   return rows.map((song) => ({

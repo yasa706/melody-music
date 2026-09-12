@@ -6,6 +6,7 @@
     "cap:add:ios": "npx cap add ios",
     "cap:sync": "npx cap sync ios",
     "cap:open": "npx cap open ios",
+    "cap:configure": "bash scripts/configure-ios.sh",
     "verify:native-audio": "swift test --package-path native-audio"
   },
   "dependencies": {

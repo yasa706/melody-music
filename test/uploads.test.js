@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { validateUpload, makeObjectKey } from '../src/uploads.js';
+import { validateUpload, makeObjectKey, storeUpload } from '../src/uploads.js';
 
 test('audio upload accepts supported formats and rejects executable data', () => {
   const supported = [
@@ -37,4 +37,12 @@ test('generated object keys use expected prefixes', () => {
   assert.match(makeObjectKey({ type: 'audio/flac', name: 'a.flac' }, 'audio'), /^audio\/.+\.flac$/);
   assert.match(makeObjectKey({ type: 'image/png', name: 'a.png' }, 'cover'), /^covers\/.+\.png$/);
   assert.match(makeObjectKey({ type: 'text/plain', name: 'a.lrc' }, 'lyrics'), /^lyrics\/.+\.lrc$/);
+});
+
+test('uploaded media URL preserves path separators', async () => {
+  const bucket = { put: async () => {} };
+  const file = { type: 'image/png', size: 1024, name: 'cover.png' };
+  const stored = await storeUpload(bucket, file, 'cover');
+  assert.match(stored.url, /^\/media\/covers\/.+\.png$/);
+  assert.doesNotMatch(stored.url, /%2F/i);
 });

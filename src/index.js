@@ -13,6 +13,7 @@ import {
   handleUserMe
 } from './user-auth.js';
 
+import { handleDeleteUserAccount } from './user-account.js';
 import { handleAdminApi } from './admin-api.js';
 import { handleUserApi } from './user-api.js';
 import { handlePublicApi } from './public-api.js';
@@ -51,6 +52,13 @@ async function route(request, env) {
     request.method === 'GET'
   ) {
     return handleUserMe(request, env);
+  }
+
+  if (
+    url.pathname === '/api/auth/account' &&
+    request.method === 'DELETE'
+  ) {
+    return handleDeleteUserAccount(request, env);
   }
 
   /*

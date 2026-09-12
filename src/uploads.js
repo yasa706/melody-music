@@ -54,7 +54,8 @@ export async function storeUpload(bucket, file, kind) {
   validateUpload(file, kind);
   const key = makeObjectKey(file, kind);
   await bucket.put(key, file.stream ? file.stream() : file, { httpMetadata: { contentType: file.type || 'application/octet-stream' } });
-  return { key, url: `/media/${encodeURIComponent(key)}`, contentType: file.type || 'application/octet-stream', size: file.size };
+  const publicPath = key.split('/').map(encodeURIComponent).join('/');
+  return { key, url: `/media/${publicPath}`, contentType: file.type || 'application/octet-stream', size: file.size };
 }
 
 export async function deleteUpload(bucket, key) {

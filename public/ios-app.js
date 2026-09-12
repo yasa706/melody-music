@@ -84,6 +84,36 @@ export function createMelodyIOSAudio({
   });
 }
 
+async function deleteAccount(button) {
+  const confirmed = globalThis.window?.confirm?.(
+    '确定要永久删除账号吗？收藏、歌单和播放记录也会一起删除。此操作无法撤销。'
+  );
+  if (!confirmed) return;
+
+  const original = button.textContent;
+  button.disabled = true;
+  button.textContent = '正在删除…';
+
+  try {
+    const response = await fetch('/api/auth/account', {
+      method: 'DELETE',
+      credentials: 'same-origin',
+      headers: { Accept: 'application/json' },
+    });
+
+    if (!response.ok) {
+      throw new Error('删除账号失败，请重新登录后再试');
+    }
+
+    globalThis.window?.alert?.('账号已删除');
+    globalThis.window?.location?.reload?.();
+  } catch (error) {
+    globalThis.window?.alert?.(error?.message || '删除账号失败');
+    button.disabled = false;
+    button.textContent = original;
+  }
+}
+
 function installLegalLinks(doc) {
   const userMenu = doc.getElementById?.('userMenu');
   if (userMenu && !userMenu.querySelector?.('.ios-legal-links')) {
@@ -91,6 +121,13 @@ function installLegalLinks(doc) {
     links.className = 'ios-legal-links';
     links.innerHTML = '<a href="/privacy.html">隐私政策</a><a href="/terms.html">用户协议</a>';
     userMenu.appendChild(links);
+
+    const deleteButton = doc.createElement('button');
+    deleteButton.type = 'button';
+    deleteButton.className = 'ios-delete-account';
+    deleteButton.textContent = '删除账号';
+    deleteButton.addEventListener('click', () => deleteAccount(deleteButton));
+    userMenu.appendChild(deleteButton);
   }
 
   const authDialog = doc.querySelector?.('.auth-dialog');

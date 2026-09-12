@@ -7,7 +7,7 @@
     "cap:sync": "npx cap sync ios",
     "cap:open": "npx cap open ios",
     "cap:configure": "bash scripts/configure-ios.sh",
-    "verify:native-audio": "xcodebuild -scheme MelodyNativeAudio -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' -package-path native-audio build"
+    "verify:native-audio": "cd native-audio && xcodebuild -scheme MelodyNativeAudio -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' build"
   },
   "dependencies": {
     "@capacitor/core": "8.4.2",

@@ -50,16 +50,26 @@ export function makeObjectKey(file, kind) {
   return `${prefix}/${crypto.randomUUID()}.${extFor(file, kind)}`;
 }
 
-export async function storeUpload(bucket, file, kind) {
+function resolveBucket(bucketOrEnv) {
+  const bucket = bucketOrEnv?.put ? bucketOrEnv : bucketOrEnv?.MEDIA;
+  if (!bucket?.put || !bucket?.get || !bucket?.delete) {
+    throw new UploadError(500, 'MEDIA_BUCKET_UNAVAILABLE', 'Media storage is unavailable');
+  }
+  return bucket;
+}
+
+export async function storeUpload(bucketOrEnv, file, kind) {
   validateUpload(file, kind);
+  const bucket = resolveBucket(bucketOrEnv);
   const key = makeObjectKey(file, kind);
   await bucket.put(key, file.stream ? file.stream() : file, { httpMetadata: { contentType: file.type || 'application/octet-stream' } });
   const publicPath = key.split('/').map(encodeURIComponent).join('/');
   return { key, url: `/media/${publicPath}`, contentType: file.type || 'application/octet-stream', size: file.size };
 }
 
-export async function deleteUpload(bucket, key) {
+export async function deleteUpload(bucketOrEnv, key) {
   if (!key || key.includes('..')) throw new UploadError(400, 'INVALID_KEY', 'Invalid media key');
+  const bucket = resolveBucket(bucketOrEnv);
   await bucket.delete(key);
 }
 
@@ -67,7 +77,8 @@ export async function serveMedia(request, env, encodedKey) {
   let key;
   try { key = decodeURIComponent(encodedKey); } catch { return new Response('Bad request', { status: 400 }); }
   if (!key || key.includes('..')) return new Response('Not found', { status: 404 });
-  const object = await env.MEDIA.get(key);
+  const bucket = resolveBucket(env);
+  const object = await bucket.get(key);
   if (!object) return new Response('Not found', { status: 404 });
   const headers = new Headers();
   object.writeHttpMetadata?.(headers);

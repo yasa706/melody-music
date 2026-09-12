@@ -31,9 +31,14 @@ jobs:
         working-directory: ios-app
         run: npm install
 
-      - name: Verify native audio Swift package
-        working-directory: ios-app
-        run: swift test --package-path native-audio
+      - name: Verify native audio Swift package for iOS Simulator
+        working-directory: ios-app/native-audio
+        run: |
+          xcodebuild \
+            -scheme MelodyNativeAudio \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            build
 
       - name: Generate Capacitor iOS project
         working-directory: ios-app

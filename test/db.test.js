@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { listPublishedSongs, listCategories, listPlaylists, getSongById } from '../src/db.js';
+import { listPublishedSongs, listCategories, listPlaylists, getSongById, normalizeMediaUrl } from '../src/db.js';
 
 test('listPublishedSongs filters drafts and orders by sort_order', async () => {
   const calls = [];
@@ -60,4 +60,10 @@ test('album song query filters unpublished songs for public detail', async () =>
   await mod.listAlbumSongs(db, 3, true);
   assert.match(calls[0], /album_id\s*=\s*\?/);
   assert.match(calls[0], /is_published\s*=\s*1/);
+});
+
+test('legacy encoded media URLs are normalized for browser requests', () => {
+  assert.equal(normalizeMediaUrl('/media/covers%2Fabc.jpg'), '/media/covers/abc.jpg');
+  assert.equal(normalizeMediaUrl('/media/audio%2Fnested%2Fsong.mp3'), '/media/audio/nested/song.mp3');
+  assert.equal(normalizeMediaUrl('https://cdn.example.com/cover.jpg'), 'https://cdn.example.com/cover.jpg');
 });

@@ -97,10 +97,7 @@ html.ios-native-app {
   height: 44px;
 }
 
-.ios-native-app .player-song {
-  min-width: 0;
-}
-
+.ios-native-app .player-song,
 .ios-native-app .player-copy {
   min-width: 0;
 }
@@ -111,6 +108,33 @@ html.ios-native-app {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.ios-legal-links,
+.ios-auth-legal {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  font-size: 12px;
+}
+
+.ios-legal-links {
+  padding: 10px 12px 4px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.ios-auth-legal {
+  margin: 14px 0 0;
+  color: #6b6d72;
+  text-align: center;
+}
+
+.ios-legal-links a,
+.ios-auth-legal a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
 .ios-bottom-nav {

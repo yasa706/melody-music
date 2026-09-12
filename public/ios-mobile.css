@@ -1,0 +1,169 @@
+html.ios-native-app {
+  background: #f5f5f7;
+}
+
+.ios-native-app body {
+  padding-bottom: calc(132px + env(safe-area-inset-bottom));
+  background: #f5f5f7;
+}
+
+.ios-native-app .page-shell {
+  width: min(100%, 760px);
+  margin: 0 auto;
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
+.ios-native-app .page-header {
+  padding-top: calc(12px + env(safe-area-inset-top));
+  gap: 14px;
+}
+
+.ios-native-app .header-actions {
+  width: 100%;
+  flex-wrap: wrap;
+}
+
+.ios-native-app .search-box {
+  order: 1;
+  width: 100%;
+}
+
+.ios-native-app .albums-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.ios-native-app .music-layout {
+  display: block;
+}
+
+.ios-native-app .song-panel,
+.ios-native-app .now-panel {
+  margin-bottom: 18px;
+}
+
+.ios-native-app .now-panel {
+  border-radius: 24px;
+}
+
+.ios-native-app .now-cover {
+  width: min(78vw, 390px);
+  height: min(78vw, 390px);
+  object-fit: cover;
+  border-radius: 22px;
+}
+
+.ios-native-app .lyrics {
+  max-height: 44vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.ios-native-app .player-bar {
+  position: fixed;
+  left: 10px;
+  right: 10px;
+  bottom: calc(66px + env(safe-area-inset-bottom));
+  z-index: 40;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 18px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.ios-native-app .player-center {
+  display: flex;
+  align-items: center;
+}
+
+.ios-native-app .player-center .progress-row,
+.ios-native-app .player-center .round-btn,
+.ios-native-app .volume-row,
+.ios-native-app #playbackStatus {
+  display: none;
+}
+
+.ios-native-app .player-center .controls {
+  gap: 0;
+}
+
+.ios-native-app .player-center .play-btn {
+  width: 44px;
+  height: 44px;
+}
+
+.ios-native-app .player-song {
+  min-width: 0;
+}
+
+.ios-native-app .player-copy {
+  min-width: 0;
+}
+
+.ios-native-app .player-copy strong,
+.ios-native-app .player-copy span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ios-bottom-nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 50;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(250, 250, 252, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.ios-bottom-nav-button {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  min-height: 48px;
+  padding: 4px 2px;
+  font: inherit;
+  font-size: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  color: inherit;
+}
+
+.ios-bottom-nav-button span:first-child {
+  font-size: 19px;
+  line-height: 1;
+}
+
+.ios-bottom-nav-button[aria-current='page'] {
+  font-weight: 700;
+}
+
+@media (max-width: 520px) {
+  .ios-native-app .brand-area h1 {
+    font-size: 28px;
+  }
+
+  .ios-native-app .panel,
+  .ios-native-app .albums-section {
+    border-radius: 22px;
+  }
+
+  .ios-native-app .album-detail-layout {
+    display: block;
+  }
+}

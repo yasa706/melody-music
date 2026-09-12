@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { handleDeleteUserAccount } from '../src/user-auth.js';
+import { handleDeleteUserAccount } from '../src/user-account.js';
 
 function createDb({ user = null } = {}) {
   const calls = [];

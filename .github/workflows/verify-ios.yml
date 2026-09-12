@@ -23,6 +23,7 @@ jobs:
         run: |
           node --test test/ios-config.test.mjs
           node --test test/ios-bridge.test.mjs
+          node --test test/ios-playback-adapter.test.mjs
           node --test test/ios-mobile-ui.test.mjs
           node --test test/ios-release.test.mjs
 

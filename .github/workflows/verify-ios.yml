@@ -57,10 +57,11 @@ jobs:
         working-directory: ios-app
         run: |
           test -d ios/App
+          test -d ios/App/App.xcodeproj
           test -f ios/App/App/Info.plist
           /usr/libexec/PlistBuddy -c "Print :UIBackgroundModes:0" ios/App/App/Info.plist | grep -qx audio
           xcodebuild \
-            -workspace ios/App/App.xcworkspace \
+            -project ios/App/App.xcodeproj \
             -scheme App \
             -sdk iphonesimulator \
             -destination 'generic/platform=iOS Simulator' \

@@ -84,14 +84,85 @@ export function createMelodyIOSAudio({
   });
 }
 
+export function installIOSChrome(doc = globalThis.document) {
+  if (!doc?.documentElement || !doc?.body) return false;
+  if (doc.getElementById?.('iosBottomNav')) return true;
+
+  doc.documentElement.classList.add('ios-native-app');
+
+  if (!doc.querySelector?.('link[data-ios-mobile-style]')) {
+    const link = doc.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = '/ios-mobile.css';
+    link.dataset.iosMobileStyle = 'true';
+    doc.head?.appendChild(link);
+  }
+
+  const nav = doc.createElement('nav');
+  nav.id = 'iosBottomNav';
+  nav.className = 'ios-bottom-nav';
+  nav.setAttribute('aria-label', 'iPhone 主导航');
+  nav.innerHTML = `
+    <button class="ios-bottom-nav-button" type="button" data-ios-tab="home" aria-current="page"><span>⌂</span><span>首页</span></button>
+    <button class="ios-bottom-nav-button" type="button" data-ios-tab="albums"><span>▦</span><span>专辑</span></button>
+    <button class="ios-bottom-nav-button" type="button" data-ios-tab="search"><span>⌕</span><span>搜索</span></button>
+    <button class="ios-bottom-nav-button" type="button" data-ios-tab="my"><span>♪</span><span>我的</span></button>
+  `;
+  doc.body.appendChild(nav);
+
+  const setCurrent = (button) => {
+    nav.querySelectorAll('[data-ios-tab]').forEach((item) => item.removeAttribute('aria-current'));
+    button.setAttribute('aria-current', 'page');
+  };
+
+  nav.addEventListener('click', (event) => {
+    const button = event.target.closest?.('[data-ios-tab]');
+    if (!button) return;
+    setCurrent(button);
+
+    const tab = button.dataset.iosTab;
+    if (tab === 'home') {
+      globalThis.window?.scrollTo?.({ top: 0, behavior: 'smooth' });
+    } else if (tab === 'albums') {
+      doc.querySelector?.('.albums-section')?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
+    } else if (tab === 'search') {
+      const input = doc.getElementById?.('searchInput');
+      input?.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
+      setTimeout(() => input?.focus?.(), 250);
+    } else if (tab === 'my') {
+      const userButton = doc.getElementById?.('userMenuButton');
+      const loginButton = doc.getElementById?.('loginButton');
+      if (userButton && !userButton.closest?.('[hidden]')) userButton.click?.();
+      else loginButton?.click?.();
+    }
+  });
+
+  const miniPlayer = doc.querySelector?.('.player-song');
+  miniPlayer?.addEventListener?.('click', () => {
+    doc.querySelector?.('.now-panel')?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
+  });
+
+  return true;
+}
+
 function resolveNativePlugin() {
   return globalThis.window?.Capacitor?.Plugins?.NativeAudio || null;
 }
 
 if (typeof window !== 'undefined') {
+  const plugin = resolveNativePlugin();
   window.MelodyIOSAudio = createMelodyIOSAudio({
-    plugin: resolveNativePlugin(),
+    plugin,
     target: window,
     origin: window.location.origin,
   });
+
+  if (plugin) {
+    const install = () => installIOSChrome(document);
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', install, { once: true });
+    } else {
+      install();
+    }
+  }
 }

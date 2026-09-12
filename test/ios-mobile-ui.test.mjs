@@ -16,9 +16,18 @@ test('iOS mobile stylesheet contains required app chrome hooks', () => {
   }
 });
 
-test('iOS bridge exposes four primary navigation destinations', () => {
-  const source = fs.readFileSync('public/ios-app.js', 'utf8');
+test('public page contains the approved iPhone navigation and player hooks', () => {
+  const html = fs.readFileSync('public/index.html', 'utf8');
   for (const tab of ['home', 'albums', 'search', 'my']) {
-    assert.match(source, new RegExp(`data-ios-tab=["']${tab}["']`));
+    assert.match(html, new RegExp(`data-ios-tab=["']${tab}["']`));
   }
+  assert.match(html, /id=["']ios-mini-player["']/);
+  assert.match(html, /id=["']ios-now-playing["']/);
+  assert.match(html, /id=["']iosBottomNav["']/);
+});
+
+test('iOS controller activates existing static app chrome instead of duplicating it', () => {
+  const source = fs.readFileSync('public/ios-app.js', 'utf8');
+  assert.match(source, /getElementById\?\.\(['"]iosBottomNav['"]\)/);
+  assert.match(source, /removeAttribute\(['"]hidden['"]\)/);
 });

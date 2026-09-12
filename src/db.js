@@ -85,7 +85,7 @@ export async function getPlaylistSongIds(db, playlistId) {
 }
 
 export async function getSongPlaylistIds(db, songId) {
-  const { results = [] } = await db.prepare('SELECT playlist_id FROM playlist_songs WHERE song_id = ? ORDER BY playlist_id ASC').bind(Number(songId)).all();
+  const { results = [] } = await db.prepare('SELECT playlist_id FROM playlist_songs WHERE song_id = ? ORDER BY sort_order ASC').bind(Number(songId)).all();
   return results.map(r => r.playlist_id);
 }
 

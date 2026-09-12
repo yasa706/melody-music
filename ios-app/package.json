@@ -5,11 +5,13 @@
   "scripts": {
     "cap:add:ios": "npx cap add ios",
     "cap:sync": "npx cap sync ios",
-    "cap:open": "npx cap open ios"
+    "cap:open": "npx cap open ios",
+    "verify:native-audio": "swift test --package-path native-audio"
   },
   "dependencies": {
     "@capacitor/core": "8.4.2",
-    "@capacitor/ios": "8.4.2"
+    "@capacitor/ios": "8.4.2",
+    "@melody/native-audio": "file:./native-audio"
   },
   "devDependencies": {
     "@capacitor/cli": "8.4.2"

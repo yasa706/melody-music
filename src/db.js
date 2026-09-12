@@ -1,11 +1,33 @@
+export function normalizeMediaUrl(value = '') {
+  const url = String(value || '');
+  if (!url.startsWith('/media/')) return url;
+  return url.replace(/%2F/gi, '/');
+}
+
+function normalizeSongMedia(row) {
+  if (!row) return row;
+  return {
+    ...row,
+    audio_url: normalizeMediaUrl(row.audio_url),
+    cover_url: normalizeMediaUrl(row.cover_url),
+    album_cover_url: normalizeMediaUrl(row.album_cover_url),
+  };
+}
+
+function normalizeAlbumMedia(row) {
+  if (!row) return row;
+  return { ...row, cover_url: normalizeMediaUrl(row.cover_url) };
+}
+
 export async function getSongById(db, id) {
-  return db.prepare(`
+  const row = await db.prepare(`
     SELECT s.*, c.name AS category_name, a.title AS album_name, a.cover_url AS album_cover_url
     FROM songs s
     LEFT JOIN categories c ON c.id = s.category_id
     LEFT JOIN albums a ON a.id = s.album_id
     WHERE s.id = ?
   `).bind(Number(id)).first();
+  return normalizeSongMedia(row);
 }
 
 export async function listPublishedSongs(db) {
@@ -17,7 +39,7 @@ export async function listPublishedSongs(db) {
     WHERE s.is_published = 1
     ORDER BY s.sort_order ASC, s.id DESC
   `).all();
-  return results;
+  return results.map(normalizeSongMedia);
 }
 
 export async function listAllSongs(db) {
@@ -28,7 +50,7 @@ export async function listAllSongs(db) {
     LEFT JOIN albums a ON a.id = s.album_id
     ORDER BY s.sort_order ASC, s.id DESC
   `).all();
-  return results;
+  return results.map(normalizeSongMedia);
 }
 
 export async function listCategories(db) {
@@ -50,7 +72,7 @@ export async function listPlaylists(db, publishedOnly = false) {
     GROUP BY p.id
     ORDER BY p.id DESC
   `).all();
-  return results;
+  return results.map(normalizeAlbumMedia);
 }
 
 export async function getPlaylistSongIds(db, playlistId) {
@@ -63,7 +85,7 @@ export async function getPlaylistSongIds(db, playlistId) {
 }
 
 export async function getSongPlaylistIds(db, songId) {
-  const { results = [] } = await db.prepare('SELECT playlist_id FROM playlist_songs WHERE song_id = ? ORDER BY sort_order ASC').bind(Number(songId)).all();
+  const { results = [] } = await db.prepare('SELECT playlist_id FROM playlist_songs WHERE song_id = ? ORDER BY playlist_id ASC').bind(Number(songId)).all();
   return results.map(r => r.playlist_id);
 }
 
@@ -75,7 +97,6 @@ export async function replaceSongPlaylists(db, songId, playlistIds = []) {
   if (db.batch) await db.batch(statements); else for (const stmt of statements) await stmt.run();
 }
 
-
 export async function listAlbums(db, publishedOnly = false) {
   const where = publishedOnly ? 'WHERE a.is_published = 1' : '';
   const { results = [] } = await db.prepare(`
@@ -86,15 +107,16 @@ export async function listAlbums(db, publishedOnly = false) {
     GROUP BY a.id
     ORDER BY a.sort_order ASC, a.id DESC
   `).all();
-  return results;
+  return results.map(normalizeAlbumMedia);
 }
 
 export async function getAlbumById(db, id, publishedOnly = false) {
   const where = publishedOnly ? 'AND is_published = 1' : '';
-  return db.prepare(`
+  const row = await db.prepare(`
     SELECT * FROM albums
     WHERE id = ? ${where}
   `).bind(Number(id)).first();
+  return normalizeAlbumMedia(row);
 }
 
 export async function listAlbumSongs(db, albumId, publishedOnly = false) {
@@ -107,5 +129,5 @@ export async function listAlbumSongs(db, albumId, publishedOnly = false) {
     WHERE s.album_id = ? ${where}
     ORDER BY s.sort_order ASC, s.id DESC
   `).bind(Number(albumId)).all();
-  return results;
+  return results.map(normalizeSongMedia);
 }

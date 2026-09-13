@@ -7,6 +7,32 @@ html.ios-native-app {
   background: #f5f5f7;
 }
 
+.ios-launch-splash {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: stretch;
+  justify-content: stretch;
+  background: #06183a;
+  opacity: 1;
+  transition: opacity 260ms ease;
+  pointer-events: none;
+}
+
+.ios-launch-splash.is-hiding {
+  opacity: 0;
+}
+
+.ios-launch-splash img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
 .ios-native-app .page-shell {
   width: min(100%, 760px);
   margin: 0 auto;

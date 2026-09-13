@@ -22,6 +22,8 @@ final class NativeAudioPlayer {
     private var player: AVPlayer?
     private var timeObserver: Any?
     private var endObserver: NSObjectProtocol?
+    private var errorLogObserver: NSObjectProtocol?
+    private var itemStatusObservation: NSKeyValueObservation?
 
     private(set) var queue: [NativeTrack] = []
     private(set) var queueIndex: Int = -1
@@ -169,9 +171,38 @@ final class NativeAudioPlayer {
     private func replacePlayerItem(with track: NativeTrack) {
         removeObservers()
 
+        print("🎵 NativeAudio loading track id=\(track.id) title=\(track.title) url=\(track.audioUrl.absoluteString)")
+
         let item = AVPlayerItem(url: track.audioUrl)
         let newPlayer = AVPlayer(playerItem: item)
         player = newPlayer
+
+        itemStatusObservation = item.observe(\.status, options: [.initial, .new]) { [weak self] item, _ in
+            switch item.status {
+            case .unknown:
+                print("🎵 NativeAudio status=unknown trackId=\(track.id) url=\(track.audioUrl.absoluteString)")
+            case .readyToPlay:
+                let seconds = CMTimeGetSeconds(item.duration)
+                let duration = seconds.isFinite ? seconds : 0
+                print("✅ NativeAudio status=readyToPlay trackId=\(track.id) duration=\(duration) url=\(track.audioUrl.absoluteString)")
+            case .failed:
+                let errorText = item.error?.localizedDescription ?? "unknown AVPlayerItem error"
+                print("❌ NativeAudio status=failed trackId=\(track.id) url=\(track.audioUrl.absoluteString) error=\(errorText)")
+                self?.printErrorLog(for: item, track: track)
+            @unknown default:
+                print("⚠️ NativeAudio status=unknown-default trackId=\(track.id) url=\(track.audioUrl.absoluteString)")
+            }
+            self?.emitState()
+        }
+
+        errorLogObserver = NotificationCenter.default.addObserver(
+            forName: .AVPlayerItemNewErrorLogEntry,
+            object: item,
+            queue: .main
+        ) { [weak self, weak item] _ in
+            guard let item else { return }
+            self?.printErrorLog(for: item, track: track)
+        }
 
         timeObserver = newPlayer.addPeriodicTimeObserver(
             forInterval: CMTime(seconds: 0.5, preferredTimescale: 600),
@@ -197,7 +228,23 @@ final class NativeAudioPlayer {
         }
     }
 
+    private func printErrorLog(for item: AVPlayerItem, track: NativeTrack) {
+        guard let log = item.errorLog(), !log.events.isEmpty else {
+            print("❌ NativeAudio errorLog empty trackId=\(track.id) itemError=\(item.error?.localizedDescription ?? "none") url=\(track.audioUrl.absoluteString)")
+            return
+        }
+
+        for event in log.events.suffix(3) {
+            let comment = event.errorComment ?? ""
+            let uri = event.uri ?? track.audioUrl.absoluteString
+            print("❌ NativeAudio errorLog trackId=\(track.id) domain=\(event.errorDomain) code=\(event.errorStatusCode) comment=\(comment) uri=\(uri)")
+        }
+    }
+
     private func removeObservers() {
+        itemStatusObservation?.invalidate()
+        itemStatusObservation = nil
+
         if let timeObserver, let player {
             player.removeTimeObserver(timeObserver)
         }
@@ -207,6 +254,11 @@ final class NativeAudioPlayer {
             NotificationCenter.default.removeObserver(endObserver)
         }
         endObserver = nil
+
+        if let errorLogObserver {
+            NotificationCenter.default.removeObserver(errorLogObserver)
+        }
+        errorLogObserver = nil
     }
 
     private func emitState() {

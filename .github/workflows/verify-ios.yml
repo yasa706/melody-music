@@ -27,6 +27,7 @@ jobs:
           node --test test/ios-mobile-ui.test.mjs
           node --test test/ios-release.test.mjs
           node --test test/user-account-delete.test.mjs
+          node --test test/ios-native-diagnostics.test.mjs
 
       - name: Install iOS dependencies
         working-directory: ios-app

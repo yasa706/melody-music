@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { validateUpload, makeObjectKey, storeUpload } from '../src/uploads.js';
+import { validateUpload, makeObjectKey, storeUpload, serveMedia } from '../src/uploads.js';
 
 test('audio upload accepts supported formats and rejects executable data', () => {
   const supported = [
@@ -45,4 +45,37 @@ test('uploaded media URL preserves path separators', async () => {
   const stored = await storeUpload(bucket, file, 'cover');
   assert.match(stored.url, /^\/media\/covers\/.+\.png$/);
   assert.doesNotMatch(stored.url, /%2F/i);
+});
+
+test('serveMedia honors byte range requests with 206 response', async () => {
+  const calls = [];
+  const bucket = {
+    put: async () => {},
+    delete: async () => {},
+    head: async (key) => ({
+      key,
+      size: 45642280,
+      etag: 'etag',
+      httpMetadata: { contentType: 'audio/wav' },
+      writeHttpMetadata(headers) { headers.set('content-type', 'audio/wav'); },
+    }),
+    get: async (key, options) => {
+      calls.push({ key, options });
+      return {
+        body: new Uint8Array(100),
+        size: 45642280,
+        etag: 'etag',
+        httpMetadata: { contentType: 'audio/wav' },
+        writeHttpMetadata(headers) { headers.set('content-type', 'audio/wav'); },
+      };
+    },
+  };
+  const request = new Request('https://example.test/media/audio/song.wav', {
+    headers: { Range: 'bytes=0-99' },
+  });
+  const response = await serveMedia(request, { MEDIA: bucket }, 'audio/song.wav');
+  assert.equal(response.status, 206);
+  assert.equal(response.headers.get('content-range'), 'bytes 0-99/45642280');
+  assert.equal(response.headers.get('content-length'), '100');
+  assert.deepEqual(calls[0].options, { range: { offset: 0, length: 100 } });
 });

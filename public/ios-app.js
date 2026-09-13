@@ -84,6 +84,32 @@ export function createMelodyIOSAudio({
   });
 }
 
+export function installIOSLaunchSplash(doc = globalThis.document, options = {}) {
+  if (!doc?.documentElement || !doc?.createElement) return false;
+
+  const win = doc.defaultView || globalThis.window;
+  const storage = win?.sessionStorage;
+  if (storage?.getItem?.('melody_ios_splash_shown') === '1') return false;
+  if (doc.getElementById?.('iosLaunchSplash')) return true;
+
+  const duration = Number(options.duration ?? 1300);
+  const fadeDuration = Number(options.fadeDuration ?? 260);
+
+  const splash = doc.createElement('div');
+  splash.id = 'iosLaunchSplash';
+  splash.className = 'ios-launch-splash';
+  splash.setAttribute('aria-hidden', 'true');
+  splash.innerHTML = '<img src="/ios-launch.svg" alt="" draggable="false">';
+
+  (doc.body || doc.documentElement).appendChild(splash);
+  storage?.setItem?.('melody_ios_splash_shown', '1');
+
+  const setTimer = win?.setTimeout?.bind(win) || globalThis.setTimeout;
+  setTimer?.(() => splash.classList.add('is-hiding'), duration);
+  setTimer?.(() => splash.remove?.(), duration + fadeDuration);
+  return true;
+}
+
 async function deleteAccount(button) {
   const confirmed = globalThis.window?.confirm?.(
     '确定要永久删除账号吗？收藏、歌单和播放记录也会一起删除。此操作无法撤销。'
@@ -153,6 +179,7 @@ export function installIOSChrome(doc = globalThis.document) {
     doc.head?.appendChild(link);
   }
 
+  installIOSLaunchSplash(doc);
   installLegalLinks(doc);
 
   const nav = doc.createElement('nav');

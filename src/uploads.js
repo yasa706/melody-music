@@ -73,11 +73,66 @@ export async function deleteUpload(bucketOrEnv, key) {
   await bucket.delete(key);
 }
 
+function parseByteRange(value, size) {
+  const match = /^bytes=(\d*)-(\d*)$/.exec(String(value || '').trim());
+  if (!match) return null;
+  const [, startText, endText] = match;
+  if (!startText && !endText) return null;
+
+  let start;
+  let end;
+  if (!startText) {
+    const suffixLength = Number(endText);
+    if (!Number.isInteger(suffixLength) || suffixLength <= 0) return null;
+    start = Math.max(0, size - suffixLength);
+    end = size - 1;
+  } else {
+    start = Number(startText);
+    end = endText ? Number(endText) : size - 1;
+    if (!Number.isInteger(start) || !Number.isInteger(end) || start < 0 || end < start || start >= size) return null;
+    end = Math.min(end, size - 1);
+  }
+
+  return { offset: start, length: end - start + 1, start, end };
+}
+
 export async function serveMedia(request, env, encodedKey) {
   let key;
   try { key = decodeURIComponent(encodedKey); } catch { return new Response('Bad request', { status: 400 }); }
   if (!key || key.includes('..')) return new Response('Not found', { status: 404 });
   const bucket = resolveBucket(env);
+  const rangeHeader = request.headers.get('range');
+
+  if (rangeHeader && typeof bucket.head === 'function') {
+    const metadata = await bucket.head(key);
+    if (!metadata) return new Response('Not found', { status: 404 });
+    const range = parseByteRange(rangeHeader, metadata.size);
+    if (!range) {
+      return new Response(null, {
+        status: 416,
+        headers: {
+          'content-range': `bytes */${metadata.size}`,
+          'accept-ranges': 'bytes',
+        },
+      });
+    }
+
+    const object = await bucket.get(key, {
+      range: { offset: range.offset, length: range.length },
+    });
+    if (!object) return new Response('Not found', { status: 404 });
+
+    const headers = new Headers();
+    metadata.writeHttpMetadata?.(headers);
+    if (!headers.has('content-type') && metadata.httpMetadata?.contentType) headers.set('content-type', metadata.httpMetadata.contentType);
+    headers.set('accept-ranges', 'bytes');
+    headers.set('content-range', `bytes ${range.start}-${range.end}/${metadata.size}`);
+    headers.set('content-length', String(range.length));
+    headers.set('cache-control', 'public, max-age=86400');
+    if (metadata.etag) headers.set('etag', metadata.etag);
+    return new Response(object.body, { status: 206, headers });
+  }
+
   const object = await bucket.get(key);
   if (!object) return new Response('Not found', { status: 404 });
   const headers = new Headers();

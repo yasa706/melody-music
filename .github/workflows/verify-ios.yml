@@ -61,8 +61,10 @@ jobs:
           test -d ios/App
           test -d ios/App/App.xcodeproj
           test -f ios/App/App/Info.plist
-          test -f ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png
-          test -f ios/App/App/Assets.xcassets/LaunchScreen.imageset/LaunchScreen.jpg
+          test -d ios/App/App/Assets.xcassets/AppIcon.appiconset
+          test -d ios/App/App/Assets.xcassets/Splash.imageset
+          find ios/App/App/Assets.xcassets/AppIcon.appiconset -type f -name '*.png' | grep -q .
+          find ios/App/App/Assets.xcassets/Splash.imageset -type f -name '*.png' | grep -q .
           /usr/libexec/PlistBuddy -c "Print :UIBackgroundModes:0" ios/App/App/Info.plist | grep -qx audio
           xcodebuild \
             -project ios/App/App.xcodeproj \
@@ -71,4 +73,4 @@ jobs:
             -destination 'generic/platform=iOS Simulator' \
             CODE_SIGNING_ALLOWED=NO \
             build
-          echo "Capacitor iOS app builds with native audio, background audio, icon, and launch artwork"
+          echo "Capacitor iOS app builds with native audio, background audio, AppIcon, and Splash artwork"

@@ -15,6 +15,7 @@
     "@melody/native-audio": "file:./native-audio"
   },
   "devDependencies": {
+    "@capacitor/assets": "3.0.5",
     "@capacitor/cli": "8.4.2"
   }
 }

@@ -28,6 +28,7 @@ jobs:
           node --test test/ios-release.test.mjs
           node --test test/user-account-delete.test.mjs
           node --test test/ios-native-diagnostics.test.mjs
+          node --test test/ios-branding.test.mjs
 
       - name: Install iOS dependencies
         working-directory: ios-app
@@ -50,7 +51,7 @@ jobs:
         working-directory: ios-app
         run: npx cap sync ios
 
-      - name: Configure background audio
+      - name: Configure background audio and branding
         working-directory: ios-app
         run: bash scripts/configure-ios.sh
 
@@ -60,6 +61,8 @@ jobs:
           test -d ios/App
           test -d ios/App/App.xcodeproj
           test -f ios/App/App/Info.plist
+          test -f ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png
+          test -f ios/App/App/Assets.xcassets/LaunchScreen.imageset/LaunchScreen.jpg
           /usr/libexec/PlistBuddy -c "Print :UIBackgroundModes:0" ios/App/App/Info.plist | grep -qx audio
           xcodebuild \
             -project ios/App/App.xcodeproj \
@@ -68,4 +71,4 @@ jobs:
             -destination 'generic/platform=iOS Simulator' \
             CODE_SIGNING_ALLOWED=NO \
             build
-          echo "Capacitor iOS app builds with native audio and background audio"
+          echo "Capacitor iOS app builds with native audio, background audio, icon, and launch artwork"

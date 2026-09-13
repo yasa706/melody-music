@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2732" height="2732" viewBox="0 0 2732 2732">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#06183a"/>
+      <stop offset="0.5" stop-color="#0d3268"/>
+      <stop offset="0.76" stop-color="#0a2a58"/>
+      <stop offset="1" stop-color="#03142d"/>
+    </linearGradient>
+    <linearGradient id="horizon" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#143b70" stop-opacity="0"/>
+      <stop offset="0.5" stop-color="#ffbb62" stop-opacity="0.95"/>
+      <stop offset="1" stop-color="#143b70" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="note" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff8dd"/>
+      <stop offset="0.36" stop-color="#ffd884"/>
+      <stop offset="0.68" stop-color="#f1f7ff"/>
+      <stop offset="1" stop-color="#69c4ff"/>
+    </linearGradient>
+    <linearGradient id="wave" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ffc765" stop-opacity="0.9"/>
+      <stop offset="0.5" stop-color="#fff0bd" stop-opacity="0.8"/>
+      <stop offset="1" stop-color="#52b9ff" stop-opacity="0.95"/>
+    </linearGradient>
+    <radialGradient id="sun"><stop offset="0" stop-color="#ffe1a0" stop-opacity="0.95"/><stop offset="1" stop-color="#ffd06a" stop-opacity="0"/></radialGradient>
+    <radialGradient id="goldGlow"><stop offset="0" stop-color="#ffd277" stop-opacity="0.6"/><stop offset="1" stop-color="#ffd277" stop-opacity="0"/></radialGradient>
+    <radialGradient id="blueGlow"><stop offset="0" stop-color="#47aefe" stop-opacity="0.48"/><stop offset="1" stop-color="#47aefe" stop-opacity="0"/></radialGradient>
+    <filter id="blur40"><feGaussianBlur stdDeviation="40"/></filter>
+    <filter id="blur18"><feGaussianBlur stdDeviation="18"/></filter>
+  </defs>
+  <rect width="2732" height="2732" fill="url(#bg)"/>
+  <circle cx="670" cy="390" r="610" fill="url(#goldGlow)" filter="url(#blur40)"/>
+  <circle cx="2070" cy="1220" r="590" fill="url(#blueGlow)" filter="url(#blur40)"/>
+  <path d="M0 0 H980 C720 210 570 480 470 780 C360 1110 250 1330 0 1440 Z" fill="#ffd47e" opacity="0.12"/>
+  <g fill="none" stroke="url(#wave)" stroke-linecap="round">
+    <path d="M210 1130 C700 750 1040 1375 1370 1085 S2050 760 2510 1080" stroke-width="32" opacity="0.16" filter="url(#blur18)"/>
+    <path d="M190 1102 C680 798 1040 1324 1370 1050 S2050 805 2540 1053" stroke-width="11" opacity="0.86"/>
+    <path d="M190 1154 C690 850 1040 1376 1370 1100 S2050 850 2540 1105" stroke-width="5" opacity="0.56"/>
+  </g>
+  <g fill="url(#note)" stroke="#ffffff" stroke-opacity="0.46" stroke-width="10">
+    <path d="M1200 650 C1302 601 1410 522 1510 445 L1510 1290 C1510 1455 1388 1564 1238 1568 C1106 1572 998 1494 998 1376 C998 1261 1097 1171 1228 1171 C1287 1171 1340 1188 1384 1223 L1384 816 C1384 768 1337 738 1294 760 L1200 807 Z"/>
+    <path d="M1384 665 C1488 625 1608 546 1716 462 L1716 1214 C1716 1372 1605 1480 1468 1488 C1348 1494 1254 1421 1254 1318 C1254 1214 1343 1129 1462 1129 C1515 1129 1562 1143 1600 1171 L1600 764 C1600 716 1555 687 1513 709 L1384 773 Z" opacity="0.93"/>
+  </g>
+  <text x="1366" y="1780" fill="#ffffff" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif" font-size="178" font-weight="300" letter-spacing="2">Melody <tspan fill="#ffe0a3">Music</tspan></text>
+  <text x="1366" y="1930" fill="#e9eef9" text-anchor="middle" font-family="PingFang SC,Heiti SC,-apple-system,sans-serif" font-size="72" font-weight="300" letter-spacing="10">——  用音乐 · 连接心灵  ——</text>
+  <text x="1366" y="2045" fill="#c5d7f3" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif" font-size="54" font-weight="300" letter-spacing="4">Closer to God Through Music</text>
+  <rect x="0" y="2150" width="2732" height="160" fill="url(#horizon)" opacity="0.28" filter="url(#blur18)"/>
+  <circle cx="1366" cy="2210" r="145" fill="url(#sun)" opacity="0.72"/>
+  <path d="M0 2330 L0 2210 L210 2178 L340 2196 L460 2135 L570 2190 L690 2168 L810 2202 L930 2148 L1030 2193 L1170 2172 L1280 2207 L1405 2168 L1515 2212 L1640 2160 L1760 2189 L1890 2142 L2005 2184 L2130 2158 L2245 2200 L2370 2169 L2495 2192 L2610 2150 L2732 2188 L2732 2732 L0 2732 Z" fill="#04172e" opacity="0.92"/>
+  <g fill="#0a2447" opacity="0.9">
+    <rect x="430" y="2110" width="250" height="260" rx="10"/><rect x="2020" y="2085" width="285" height="285" rx="10"/>
+    <rect x="515" y="1940" width="22" height="430"/><rect x="590" y="1990" width="18" height="380"/><rect x="2110" y="1910" width="22" height="460"/><rect x="2208" y="1960" width="18" height="410"/>
+    <circle cx="555" cy="2110" r="130"/><circle cx="2162" cy="2085" r="142"/>
+  </g>
+  <path d="M0 2435 C430 2390 780 2472 1150 2425 C1500 2380 1850 2478 2225 2428 C2440 2400 2590 2408 2732 2425 L2732 2732 L0 2732 Z" fill="#021126" opacity="0.76"/>
+  <g opacity="0.68">
+    <circle cx="730" cy="690" r="10" fill="#ffd277"/><circle cx="850" cy="610" r="5" fill="#fff2ba"/><circle cx="2015" cy="780" r="8" fill="#74caff"/><circle cx="2160" cy="950" r="5" fill="#b1e2ff"/>
+  </g>
+</svg>

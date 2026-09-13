@@ -5,9 +5,9 @@ import fs from 'node:fs';
 const configure = () => fs.readFileSync('ios-app/scripts/configure-ios.sh', 'utf8');
 const packageJson = () => JSON.parse(fs.readFileSync('ios-app/package.json', 'utf8'));
 
-test('iOS branding sources are committed as portable encoded assets', () => {
-  assert.ok(fs.existsSync('ios-app/branding/icon-only.jpg.b64'));
-  assert.ok(fs.existsSync('ios-app/branding/splash.jpg.b64'));
+test('iOS branding sources are committed as editable vector artwork', () => {
+  assert.ok(fs.existsSync('ios-app/branding/icon-only.svg'));
+  assert.ok(fs.existsSync('ios-app/branding/splash.svg'));
 });
 
 test('iOS project uses the official Capacitor asset generator', () => {
@@ -15,11 +15,11 @@ test('iOS project uses the official Capacitor asset generator', () => {
   assert.equal(pkg.devDependencies?.['@capacitor/assets'], '3.0.5');
 });
 
-test('iOS configure script decodes branding and generates AppIcon and Splash assets', () => {
+test('iOS configure script rasterizes branding and generates AppIcon and Splash assets', () => {
   const script = configure();
-  assert.match(script, /icon-only\.jpg\.b64/);
-  assert.match(script, /splash\.jpg\.b64/);
-  assert.match(script, /base64 --decode|base64 -D/);
+  assert.match(script, /branding\/icon-only\.svg/);
+  assert.match(script, /branding\/splash\.svg/);
+  assert.match(script, /sips/);
   assert.match(script, /@capacitor\/assets generate --ios/);
   assert.match(script, /AppIcon\.appiconset/);
   assert.match(script, /Splash\.imageset/);
